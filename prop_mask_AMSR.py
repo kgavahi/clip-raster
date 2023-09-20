@@ -5,7 +5,7 @@ import shapefile
 import time
 import h5py  
 
-np.arange(['aa'])
+
     
     
 ''' -------------Dataset Specific------------------- '''
