@@ -10,6 +10,7 @@ import h5py
 import numpy as np
 import time
 import xarray as xr
+import matplotlib.pyplot as plt
 ''' -------------Dataset Specific------------------- '''
 # Load your original 25km xarray dataset
 #da_mask = h5py.File(f'AMSR_U2_L3_DailySnow_B02_20230330.he5','r')
@@ -34,7 +35,7 @@ mean = r1.clip('Export_Output_2.shp')
 print(time.time()-s)'''
 
 
-da = xr.open_dataset('us_ssmv11034tS__T0001TTNATS2017112005HP001.nc')
+da = xr.open_dataset('us_ssmv11034tS__T0001TTNATS2003100105HP001.nc')
 swe = np.array(da.Band1)
 lat = np.array(da.lat)
 lon = np.array(da.lon)
@@ -42,6 +43,22 @@ lon = np.array(da.lon)
 r1 = ClipRaster(swe, lat, lon, 0.015)
 
 s=time.time()   
-mean = r1.clip('hysets_01135300.shp')
-print(mean)
+r1_cliped = r1.clip('hysets_01472157.shp', drop=True)
+mask = r1.mask_shp('hysets_01472157.shp')
+print(mask)
 print(time.time()-s)
+
+
+np.savetxt('r1_cliped_slow.csv', np.flip(np.flip(r1_cliped), axis=1), delimiter=',')
+
+
+plt.imshow(r1_cliped)
+plt.colorbar()
+
+# =============================================================================
+# x = np.arange(10*10*3).reshape(3,10,10)
+# 
+# m = np.arange(10*10).reshape(10,10)
+# =============================================================================
+
+

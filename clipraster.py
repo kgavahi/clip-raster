@@ -43,15 +43,23 @@ class ClipRaster:
         self.cell_size = cell_size
         self.shape = raster.shape
         
-    def clip(self, shp_path: str):
+    def clip(self, shp_path: str, scale_factor=25, drop=True):
         """
         
 
         Parameters
         ----------
         shp_path : str
-            path to the shapefile..
-
+            path to the shapefile.
+        scale_factor : int, optional
+            higher scale factor will result in higher computational cost but also
+            higher accuracy. If you want to include cells that are covered by 
+            even smaller areas of the shapefile, increase the scale_factor.
+            The default is 25.
+        drop : bool, optional
+            if true the margins will be removed to get a smaller raster after clip.
+            if False, the size will not change but outside values will be nan.
+            
         Returns
         -------
         raster_cropped : nparray
@@ -59,34 +67,18 @@ class ClipRaster:
             of shapefile values.
 
         """
-        shp = shapefile.Reader(shp_path)
         
-        # Get the polygon vertices of the basin
-        tupVerts = shp.shapes()[0].points
-
-        # Create a mask for the shapefile
+        mask = self.mask_shp(shp_path, scale_factor)
+        mask = mask > 0
         
-        if self.lat.ndim==1:
-            x, y = np.meshgrid(self.lon, self.lat)
-            xf, yf = x.flatten(), y.flatten()
-        if self.lat.ndim==2:    
-            x = self.lon
-            y = self.lat
-            xf, yf = x.flatten(), y.flatten()
+        raster_cropped = np.where(mask, self.raster, np.nan)
+        
+        if drop:
+            nan_cols = np.all(~mask, axis=0)
+            nan_rows = np.all(~mask, axis=1)
+    
             
-        points = np.vstack((xf,yf)).T 
-        p = Path(tupVerts) # make a polygon
-        grid = p.contains_points(points)
-        mask = grid.reshape(x.shape[0],x.shape[1]) # now you have a mask with points inside a polygon
-        
-        raster_clipped = np.where(mask, self.raster, np.nan)
-        
-        
-        nan_cols = np.all(~mask, axis=0)
-        nan_rows = np.all(~mask, axis=1)
-
-        
-        raster_cropped = raster_clipped[:, ~nan_cols][~nan_rows]
+            raster_cropped = raster_cropped[:, ~nan_cols][~nan_rows]
         
         return raster_cropped                  
         
@@ -97,7 +89,7 @@ class ClipRaster:
         ----------
         shp_path : str
             path to the shapefile.
-        scale_factor : TYPE, optional
+        scale_factor : int, optional
             higher scale factor will result in higher computational cost but also
             higher accuracy. The default is 25.
 
@@ -121,8 +113,8 @@ class ClipRaster:
         right = np.max(tupVerts_np[:, 0]) + self.cell_size
 
         # Create new coordinates for the downscaled grid
-        new_lon = np.arange(left, right, 1/scale_factor)
-        new_lat = np.arange(down, up, 1/scale_factor)
+        new_lon = np.arange(left, right, self.cell_size/scale_factor)
+        new_lat = np.arange(down, up, self.cell_size/scale_factor)
         
         # Create a mask for the shapefile
         x, y = np.meshgrid(new_lon, new_lat)
@@ -168,7 +160,7 @@ class ClipRaster:
         ----------
         shp_path : str
             path to the shapefile.
-        scale_factor : TYPE, optional
+        scale_factor : int, optional
             higher scale factor will result in higher computational cost but also
             higher accuracy. The default is 25.
 
