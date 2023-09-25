@@ -11,6 +11,7 @@ import numpy as np
 import time
 import xarray as xr
 import matplotlib.pyplot as plt
+import pandas as pd
 ''' -------------Dataset Specific------------------- '''
 # Load your original 25km xarray dataset
 #da_mask = h5py.File(f'AMSR_U2_L3_DailySnow_B02_20230330.he5','r')
@@ -35,7 +36,7 @@ mean = r1.clip('Export_Output_2.shp')
 print(time.time()-s)'''
 
 
-da = xr.open_dataset('us_ssmv11034tS__T0001TTNATS2003100105HP001.nc')
+da = xr.open_dataset('us_ssmv11034tS__T0001TTNATS2019050205HP001.nc')
 swe = np.array(da.Band1)
 lat = np.array(da.lat)
 lon = np.array(da.lon)
@@ -43,8 +44,8 @@ lon = np.array(da.lon)
 r1 = ClipRaster(swe, lat, lon, 0.015)
 
 s=time.time()   
-r1_cliped = r1.clip('hysets_01472157.shp', drop=True)
-mask = r1.mask_shp('hysets_01472157.shp')
+r1_cliped = r1.clip('08ND019.shp', drop=True, scale_factor=25)
+mask = r1.mask_shp('08ND019.shp')
 print(mask)
 print(time.time()-s)
 
@@ -59,6 +60,31 @@ plt.colorbar()
 # x = np.arange(10*10*3).reshape(3,10,10)
 # 
 # m = np.arange(10*10).reshape(10,10)
+# mask = m>5
+# 
+# #t = x[mask[..., None]]
+# 
+# 
+# xx = mask[None, ...]
+# b = np.dstack([mask]*3)
+# b = np.tile(mask,(3, 1,1))
+# 
+# t = x[:, mask]
+# 
+# da = xr.DataArray(
+#     x,
+# 
+# )
+# 
+# da_m = xr.DataArray(
+#     mask,
+# 
+# )
 # =============================================================================
+
+
+
+
+
 
 
