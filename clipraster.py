@@ -43,7 +43,7 @@ class ClipRaster:
         self.cell_size = cell_size
         self.shape = raster.shape
         
-    def clip(self, shp_path: str, scale_factor=25, drop=True):
+    def clip(self, shp_path: str, scale_factor=1, drop=True):
         """
         
 
@@ -55,7 +55,9 @@ class ClipRaster:
             higher scale factor will result in higher computational cost but also
             higher accuracy. If you want to include cells that are covered by 
             even smaller areas of the shapefile, increase the scale_factor.
-            The default is 25.
+            The default is 1 which means no downscaling and
+            the center of the pixel must be inside the polygon to be added to 
+            the mask.
         drop : bool, optional
             if true the margins will be removed to get a smaller raster after clip.
             if False, the size will not change but outside values will be nan.
@@ -80,9 +82,11 @@ class ClipRaster:
             
             raster_cropped = raster_cropped[:, ~nan_cols][~nan_rows]
         
-        return raster_cropped                  
+        return raster_cropped      
+    
         
-    def mask_shp(self, shp_path: str, scale_factor=25):
+    def mask_shp(self, shp_path: str, scale_factor=1):
+        assert scale_factor >= 1, "scale_factor is less than one"
         """
         
         Parameters
@@ -91,7 +95,9 @@ class ClipRaster:
             path to the shapefile.
         scale_factor : int, optional
             higher scale factor will result in higher computational cost but also
-            higher accuracy. The default is 25.
+            higher accuracy. The default is 1 which means no downscaling and
+            the center of the pixel must be inside the polygon to be added to 
+            the mask.
 
         Returns
         -------
@@ -105,54 +111,58 @@ class ClipRaster:
         # Get the polygon vertices of the basin
         tupVerts = shp.shapes()[0].points
         
-        # Get the boundries of the basin
-        tupVerts_np = np.array(tupVerts)
-        up = np.max(tupVerts_np[:, 1]) + self.cell_size
-        down = np.min(tupVerts_np[:, 1]) - self.cell_size
-        left = np.min(tupVerts_np[:, 0]) - self.cell_size
-        right = np.max(tupVerts_np[:, 0]) + self.cell_size
-
-        # Create new coordinates for the downscaled grid
-        new_lon = np.arange(left, right, self.cell_size/scale_factor)
-        new_lat = np.arange(down, up, self.cell_size/scale_factor)
-        
-        # Create a mask for the shapefile
-        x, y = np.meshgrid(new_lon, new_lat)
-        xf, yf = x.flatten(), y.flatten()
-        points = np.vstack((xf,yf)).T 
-        p = Path(tupVerts) # make a polygon
-        grid = p.contains_points(points)
-        mask = grid.reshape(x.shape[0],x.shape[1]) # now you have a mask with points inside a polygon
-
-        mask_true = np.where(mask)
-               
-        mask_original = np.zeros(self.shape)
-        for i, j in zip(mask_true[0], mask_true[1]):
-              
+        if scale_factor==1:
             
-            if self.lat.ndim==1:
-                abs_lat = np.abs(new_lat[i] - self.lat)
-                arg_lat = np.argmin(abs_lat)
+            # Create a mask for the shapefile
+            mask = mask_with_vert_points(tupVerts, self.lat, self.lon)
                 
-                abs_lon = np.abs(new_lon[j] - self.lon)
-                arg_lon = np.argmin(abs_lon)
+            mask_original = mask / np.sum(mask)
+                
+                
+        else:
+            # Get the boundries of the basin
+            tupVerts_np = np.array(tupVerts)
+            up = np.max(tupVerts_np[:, 1]) + self.cell_size
+            down = np.min(tupVerts_np[:, 1]) - self.cell_size
+            left = np.min(tupVerts_np[:, 0]) - self.cell_size
+            right = np.max(tupVerts_np[:, 0]) + self.cell_size
+    
+            # Create new coordinates for the downscaled grid
+            new_lon = np.arange(left, right, self.cell_size/scale_factor)
+            new_lat = np.arange(down, up, self.cell_size/scale_factor)
             
-            if self.lat.ndim==2:
-                d = np.sqrt((new_lat[i] - self.lat)**2 + (new_lon[j] - self.lon)**2)
-                arg_d = np.where(d==np.nanmin(d))
-                arg_lat = arg_d[0][0]
-                arg_lon = arg_d[1][0]
+            # Create a mask for the shapefile
+            mask = mask_with_vert_points(tupVerts, new_lat, new_lon)
+    
+            mask_true = np.where(mask)
+                   
+            mask_original = np.zeros(self.shape)
+            for i, j in zip(mask_true[0], mask_true[1]):
+                  
+                
+                if self.lat.ndim==1:
+                    abs_lat = np.abs(new_lat[i] - self.lat)
+                    arg_lat = np.argmin(abs_lat)
+                    
+                    abs_lon = np.abs(new_lon[j] - self.lon)
+                    arg_lon = np.argmin(abs_lon)
+                
+                if self.lat.ndim==2:
+                    d = np.sqrt((new_lat[i] - self.lat)**2 + (new_lon[j] - self.lon)**2)
+                    arg_d = np.where(d==np.nanmin(d))
+                    arg_lat = arg_d[0][0]
+                    arg_lon = arg_d[1][0]
+                
+                
+                
+                mask_original[arg_lat, arg_lon] += 1
+                
             
-            
-            
-            mask_original[arg_lat, arg_lon] += 1
-            
-        
-        mask_original /= np.sum(mask_original)
+            mask_original /= np.sum(mask_original)
         
         return mask_original
     
-    def get_mean(self, shp_path: str, scale_factor=25):
+    def get_mean(self, shp_path: str, scale_factor=1):
         """
         
 
@@ -162,7 +172,9 @@ class ClipRaster:
             path to the shapefile.
         scale_factor : int, optional
             higher scale factor will result in higher computational cost but also
-            higher accuracy. The default is 25.
+            higher accuracy. The default is 1 which means no downscaling and
+            the center of the pixel must be inside the polygon to be added to 
+            the mask.
 
         Returns
         -------
@@ -178,7 +190,25 @@ class ClipRaster:
         
         
         
+def mask_with_vert_points(tupVerts, lat, lon):
+    
+    if lat.ndim==1:
+
+        x, y = np.meshgrid(lon, lat)
         
+    if lat.ndim==2:
+        x = lon
+        y = lat
+        
+    xf, yf = x.flatten(), y.flatten()
+    points = np.vstack((xf,yf)).T 
+    p = Path(tupVerts) # make a polygon
+    grid = p.contains_points(points)
+    mask = grid.reshape(x.shape[0],x.shape[1]) # now you have a mask with points inside a polygon  
+    
+    
+    
+    return mask        
         
         
         
