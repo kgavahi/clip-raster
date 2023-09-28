@@ -52,7 +52,7 @@ s=time.time()
 r1_cliped = r1.clip('hysets_06469400.shp', drop=True, scale_factor=3)
 
 
-print('mean=', r1.get_mean('hysets_06469400.shp', scale_factor=400))
+print('mean=', r1.get_mean('hysets_06469400.shp', scale_factor=50))
 
 print("time:", time.time()-s)
 

@@ -122,10 +122,10 @@ class ClipRaster:
         else:
             # Get the boundries of the basin
             tupVerts_np = np.array(tupVerts)
-            up = np.max(tupVerts_np[:, 1]) + self.cell_size
-            down = np.min(tupVerts_np[:, 1]) - self.cell_size
-            left = np.min(tupVerts_np[:, 0]) - self.cell_size
-            right = np.max(tupVerts_np[:, 0]) + self.cell_size
+            up = np.max(tupVerts_np[:, 1])
+            down = np.min(tupVerts_np[:, 1])
+            left = np.min(tupVerts_np[:, 0])
+            right = np.max(tupVerts_np[:, 0])
     
             # Create new coordinates for the downscaled grid
             new_lon = np.arange(left, right, self.cell_size/scale_factor)
