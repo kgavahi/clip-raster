@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Sep 19 11:49:03 2023
-
-@author: kgavahi
-"""
 import numpy as np
 import shapefile
 from matplotlib.path import Path
@@ -199,14 +193,13 @@ def mask_with_vert_points(tupVerts, lat, lon):
     if lat.ndim==2:
         x = lon
         y = lat
-        
+    
+    # Create a mask for the shapefile
     xf, yf = x.flatten(), y.flatten()
     points = np.vstack((xf,yf)).T 
     p = Path(tupVerts) # make a polygon
     grid = p.contains_points(points)
     mask = grid.reshape(x.shape[0],x.shape[1]) # now you have a mask with points inside a polygon  
-    
-    
     
     return mask        
         
