@@ -35,7 +35,7 @@ class ClipRaster:
         self.lat = lat
         self.lon = lon
         self.cell_size = cell_size
-        self.shape = raster.shape
+        #self.shape = raster.shape
         
     def clip(self, shp_path: str, scale_factor=1, drop=True):
         """
