@@ -12,15 +12,19 @@ from matplotlib.path import Path
 
 
 
+x = np.arange(10*7).reshape(10, 7)
 
-shp_path = 'shpfiles/ACF_basin.shp'
 
-shp = shapefile.Reader(shp_path)
-tupVerts = shp.shapes()[0].points
+mask = ((x>15) & (x<19)) | ((x>22) & (x<26)) |  ((x>29) & (x<33))
+mask[1, 3] = True
+mask[3, 1] = True
+mask[5, 3] = True
+mask[3, 5] = True
 
-# Create a mask for the shapefile
-xf, yf = x.flatten(), y.flatten()
-points = np.vstack((xf,yf)).T 
-p = Path(tupVerts) # make a polygon
-grid = p.contains_points(points)
-mask = grid.reshape(x.shape[0],x.shape[1])
+print(index[mask.flatten()])
+
+
+
+
+
+x[:, ~nan_cols][~nan_rows] = 1000

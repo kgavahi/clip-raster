@@ -100,6 +100,7 @@ class ClipRaster:
             inside cells are the percentage of the area covered by the shapefile.
 
         """
+        # TODO: assert that the shapefile file has only one shapefile in it.
         shp = shapefile.Reader(shp_path)
         
         # Get the polygon vertices of the basin
