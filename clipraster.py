@@ -1,6 +1,7 @@
 import numpy as np
 import shapefile
 from matplotlib.path import Path
+from inpoly import inpoly2
 class ClipRaster:
     """Clip raster class for clipping 2D raster files using a shapefile. 
     The clip raster class can also calculate weighted average over the shapefile
@@ -35,7 +36,7 @@ class ClipRaster:
         self.lat = lat
         self.lon = lon
         self.cell_size = cell_size
-        #self.shape = raster.shape
+        self.shape = raster.shape
         
     def clip(self, shp_path: str, scale_factor=1, drop=True):
         """
@@ -127,7 +128,7 @@ class ClipRaster:
             new_lat = np.arange(down, up, self.cell_size/scale_factor)
             
             # Create a mask for the shapefile
-            mask = mask_with_vert_points(tupVerts, new_lat, new_lon)
+            mask = mask_with_vert_points(tupVerts, new_lat, new_lon, mode='matplotlib')
     
             mask_true = np.where(mask)
                    
@@ -185,7 +186,7 @@ class ClipRaster:
         
         
         
-def mask_with_vert_points(tupVerts, lat, lon):
+def mask_with_vert_points(tupVerts, lat, lon, mode='bbinpoly'):
     
     if lat.ndim==1:
 
@@ -195,12 +196,57 @@ def mask_with_vert_points(tupVerts, lat, lon):
         x = lon
         y = lat
     
-    # Create a mask for the shapefile
-    xf, yf = x.flatten(), y.flatten()
-    points = np.vstack((xf,yf)).T 
-    p = Path(tupVerts) # make a polygon
-    grid = p.contains_points(points)
-    mask = grid.reshape(x.shape[0],x.shape[1]) # now you have a mask with points inside a polygon  
+    
+    if mode=='matplotlib':
+        # Create a mask for the shapefile
+        xf, yf = x.flatten(), y.flatten()
+        points = np.vstack((xf,yf)).T 
+        p = Path(tupVerts) # make a polygon
+        grid = p.contains_points(points)
+        mask = grid.reshape(x.shape[0],x.shape[1]) # now you have a mask with points inside a polygon 
+    
+    
+    if mode=='inpoly':
+        xf, yf = x.flatten(), y.flatten()
+        points = np.vstack((xf,yf)).T 
+        # use inpoly which lightning fast
+        isin, ison = inpoly2(points, tupVerts)
+        mask = isin.reshape(x.shape[0],x.shape[1])
+    
+    
+    
+    if mode=='bbinpoly':    
+        # Perform a boundry clip first
+        tupVerts_np = np.array(tupVerts)
+        up = np.max(tupVerts_np[:, 1])
+        down = np.min(tupVerts_np[:, 1])
+        left = np.min(tupVerts_np[:, 0])
+        right = np.max(tupVerts_np[:, 0])
+        
+        
+        mask_inpoly = np.zeros((x.shape[0], x.shape[1]), dtype=bool)
+        mask_inpoly_f = mask_inpoly.flatten()
+        ix = np.arange(x.shape[0]*x.shape[1]).reshape(x.shape[0], x.shape[1])
+        
+        nan_cols = np.all(~((x>left) & (x<right)), axis=0)
+        nan_rows = np.all(~((y<up) & (y>down)), axis=1)
+        
+        x_cropped = x[:, ~nan_cols][~nan_rows]
+        y_cropped = y[:, ~nan_cols][~nan_rows]
+        ix_cropped = ix[:, ~nan_cols][~nan_rows]    
+        
+        # Create a mask for the shapefile
+        xf, yf = x_cropped.flatten(), y_cropped.flatten()
+        points = np.vstack((xf,yf)).T 
+        
+        isin, ison = inpoly2(points, tupVerts)
+        
+        
+        mask_inpoly_f[ix_cropped] = isin.reshape(x_cropped.shape[0],x_cropped.shape[1])
+        
+        mask = mask_inpoly_f.reshape(x.shape[0], x.shape[1])  
+    
+    
     
     return mask        
         

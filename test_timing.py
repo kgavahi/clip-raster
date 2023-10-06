@@ -21,7 +21,7 @@ mask[3, 1] = True
 mask[5, 3] = True
 mask[3, 5] = True
 
-print(index[mask.flatten()])
+
 
 
 

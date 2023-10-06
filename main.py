@@ -49,10 +49,11 @@ r1 = ClipRaster(swe, lat, lon, 0.3)
 
 
 s=time.time()   
-r1_cliped = r1.clip('hysets_06469400.shp', drop=True, scale_factor=1)
+for i in range(1):
+    r1_cliped = r1.clip('shpfiles/ACF_basin.shp', drop=True, scale_factor=10)
 print("time:", time.time()-s)
 
-print('mean=', r1.get_mean('hysets_06469400.shp', scale_factor=1))
+print('mean=', r1.get_mean('shpfiles/ACF_basin.shp', scale_factor=1))
 
 
 
