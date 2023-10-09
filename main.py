@@ -21,81 +21,39 @@ lon = np.array(da_mask.get('HDFEOS/GRIDS/Northern Hemisphere/lon'))
 swe = np.array(da_mask.get('HDFEOS/GRIDS/Northern Hemisphere/Data Fields/SWE_NorthernDaily'))
 ''' ------------------------------------------------ '''
 
-'''
-s=time.time()        
-r1 = ClipRaster(swe, lat, lon, .3)
-print(time.time()-s)
-#mask = r1.mask_shp('Export_Output_2.shp')
-
-s=time.time()   
-mean = r1.get_mean('Export_Output_2.shp')
-print(time.time()-s)
-
-s=time.time()   
-mean = r1.clip('Export_Output_2.shp')
-print(time.time()-s)'''
 
 
-# da = xr.open_dataset('us_ssmv11034tS__T0001TTNATS2003100105HP001.nc')
-# swe = np.array(da.Band1)
-# lat = np.array(da.lat)
-# lon = np.array(da.lon)
+mod = xr.open_dataset('MOD09A1.A2003001.h10v05.006.2015153105208.hdf')
+data = np.array(mod.sur_refl_b01)
+df = pd.read_csv('h10v05_raster_to_p.txt')
+tile = 'h10v05.npy'
+lon = np.array(df.POINT_X).reshape(2400, 2400)
+lat = np.array(df.POINT_Y).reshape(2400, 2400)
+
+
 
 
 ## TODO: name should change, instantiate with ClipRaster is wierd
-r1 = ClipRaster(swe, lat, lon, 0.3)
-
+r1 = ClipRaster(data, lat, lon, 0.005)
 
 
 
 s=time.time()   
 for i in range(1):
-    r1_cliped = r1.clip('shpfiles/ACF_basin.shp', drop=True, scale_factor=10)
+    r1_cliped = r1.clip('shpfiles/ACF_basin.shp', drop=True, scale_factor=1)
 print("time:", time.time()-s)
 
 print('mean=', r1.get_mean('shpfiles/ACF_basin.shp', scale_factor=1))
 
 
-
+plt.imshow(r1_cliped)
 
 mask = r1.mask_shp('hysets_06469400.shp')
 
 np.savetxt('r1_cliped_slow.csv', np.flip(np.flip(r1_cliped), axis=1), delimiter=',')
 
 
-aa
 
-np.savetxt('r1_cliped_slow.csv', np.flip(np.flip(r1_cliped), axis=1), delimiter=',')
-
-
-plt.imshow(r1_cliped)
-plt.colorbar()
-
-# =============================================================================
-# x = np.arange(10*10*3).reshape(3,10,10)
-# 
-# m = np.arange(10*10).reshape(10,10)
-# mask = m>5
-# 
-# #t = x[mask[..., None]]
-# 
-# 
-# xx = mask[None, ...]
-# b = np.dstack([mask]*3)
-# b = np.tile(mask,(3, 1,1))
-# 
-# t = x[:, mask]
-# 
-# da = xr.DataArray(
-#     x,
-# 
-# )
-# 
-# da_m = xr.DataArray(
-#     mask,
-# 
-# )
-# =============================================================================
 
 
 
