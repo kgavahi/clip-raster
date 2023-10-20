@@ -39,7 +39,7 @@ r1 = ClipRaster(data, lat, lon, 0.005)
 
 
 s=time.time()   
-for i in range(1):
+for i in range(100):
     r1_cliped = r1.clip('shpfiles/ACF_basin.shp', drop=True, scale_factor=1)
 print("time:", time.time()-s)
 
@@ -48,9 +48,8 @@ print('mean=', r1.get_mean('shpfiles/ACF_basin.shp', scale_factor=1))
 
 plt.imshow(r1_cliped)
 
-mask = r1.mask_shp('hysets_06469400.shp')
 
-np.savetxt('r1_cliped_slow.csv', np.flip(np.flip(r1_cliped), axis=1), delimiter=',')
+
 
 
 
