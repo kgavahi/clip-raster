@@ -186,7 +186,7 @@ class ClipRaster:
         
         
         
-def mask_with_vert_points(tupVerts, lat, lon, mode='inpoly'):
+def mask_with_vert_points(tupVerts, lat, lon, mode='bbinpoly'):
     
     if lat.ndim==1:
 
