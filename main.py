@@ -23,27 +23,32 @@ swe = np.array(da_mask.get('HDFEOS/GRIDS/Northern Hemisphere/Data Fields/SWE_Nor
 
 
 
-mod = xr.open_dataset('MOD09A1.A2003001.h10v05.006.2015153105208.hdf', engine='netcdf4')
-data = np.array(mod.sur_refl_b01)
-df = pd.read_csv('h10v05_raster_to_p.txt')
-tile = 'h10v05.npy'
-lon = np.array(df.POINT_X).reshape(2400, 2400)
-lat = np.array(df.POINT_Y).reshape(2400, 2400)
-print(data)
+# mod = xr.open_dataset('MOD09A1.A2003001.h10v05.006.2015153105208.hdf', engine='netcdf4')
+# data = np.array(mod.sur_refl_b01)
+# df = pd.read_csv('h10v05_raster_to_p.txt')
+# tile = 'h10v05.npy'
+# lon = np.array(df.POINT_X).reshape(2400, 2400)
+# lat = np.array(df.POINT_Y).reshape(2400, 2400)
+# #print(data)
+
+nldas = xr.open_dataset('NLDAS_FORA0125_H.A20000101.0000.002.grb.SUB.nc4', engine='netcdf4')
+data = np.array(nldas.TMP)[0, 0]
+lat = np.array(nldas.lat)
+lon = np.array(nldas.lon)
 
 
 
 ## TODO: name should change, instantiate with ClipRaster is wierd
-r1 = ClipRaster(data, lat, lon, 0.005)
+r1 = ClipRaster(data, lat, lon, 0.125)
 
 
 
 s=time.time()   
-for i in range(100):
-    r1_cliped = r1.clip('shpfiles/ACF_basin.shp', drop=True, scale_factor=1)
+for i in range(1):
+    r1_cliped = r1.clip('shpfiles/ACF_basin.shp', drop=True, scale_factor=50)
 print("time:", time.time()-s)
 
-print('mean=', r1.get_mean('shpfiles/ACF_basin.shp', scale_factor=1))
+print('mean=', r1.get_mean('shpfiles/ACF_basin.shp', scale_factor=100))
 
 
 plt.imshow(r1_cliped)

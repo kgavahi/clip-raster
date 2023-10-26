@@ -30,6 +30,7 @@ class ClipRaster:
         assert isinstance(raster, np.ndarray), "raster is not a numpy array"
         assert isinstance(lat, np.ndarray), "lat is not a numpy array"
         assert isinstance(lon, np.ndarray), "lon is not a numpy array"
+        #TODO add 3D
         assert raster.ndim == 2, "raster must be a 2D array"
         
         self.raster = raster
@@ -128,7 +129,7 @@ class ClipRaster:
             new_lat = np.arange(down, up, self.cell_size/scale_factor)
             
             # Create a mask for the shapefile
-            mask = mask_with_vert_points(tupVerts, new_lat, new_lon, mode='matplotlib')
+            mask = mask_with_vert_points(tupVerts, new_lat, new_lon)
     
             mask_true = np.where(mask)
                    
@@ -186,7 +187,7 @@ class ClipRaster:
         
         
         
-def mask_with_vert_points(tupVerts, lat, lon, mode='bbinpoly'):
+def mask_with_vert_points(tupVerts, lat, lon, mode='inpoly'):
     
     if lat.ndim==1:
 
@@ -207,47 +208,19 @@ def mask_with_vert_points(tupVerts, lat, lon, mode='bbinpoly'):
     
     
     if mode=='inpoly':
+        
         xf, yf = x.flatten(), y.flatten()
-        points = np.vstack((xf,yf)).T 
+        
+        #TODO here can be more optimization
+        #points = np.vstack((xf,yf)).T
+        points = np.transpose((xf, yf))
+        #points = np.column_stack((xf,yf))
+        
         # use inpoly which lightning fast
         isin, ison = inpoly2(points, tupVerts)
         mask = isin.reshape(x.shape[0],x.shape[1])
-    
-    
-    
-    if mode=='bbinpoly':    
-        # Perform a boundry clip first
-        tupVerts_np = np.array(tupVerts)
-        up = np.max(tupVerts_np[:, 1])
-        down = np.min(tupVerts_np[:, 1])
-        left = np.min(tupVerts_np[:, 0])
-        right = np.max(tupVerts_np[:, 0])
         
-        
-        mask_inpoly = np.zeros((x.shape[0], x.shape[1]), dtype=bool)
-        mask_inpoly_f = mask_inpoly.flatten()
-        ix = np.arange(x.shape[0]*x.shape[1]).reshape(x.shape[0], x.shape[1])
-        
-        nan_cols = np.all(~((x>left) & (x<right)), axis=0)
-        nan_rows = np.all(~((y<up) & (y>down)), axis=1)
-        
-        x_cropped = x[:, ~nan_cols][~nan_rows]
-        y_cropped = y[:, ~nan_cols][~nan_rows]
-        ix_cropped = ix[:, ~nan_cols][~nan_rows]    
-        
-        # Create a mask for the shapefile
-        xf, yf = x_cropped.flatten(), y_cropped.flatten()
-        points = np.vstack((xf,yf)).T 
-        
-        isin, ison = inpoly2(points, tupVerts)
-        
-        
-        mask_inpoly_f[ix_cropped] = isin.reshape(x_cropped.shape[0],x_cropped.shape[1])
-        
-        mask = mask_inpoly_f.reshape(x.shape[0], x.shape[1])  
-    
-    
-    
+          
     return mask        
         
         
