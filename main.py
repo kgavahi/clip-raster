@@ -22,7 +22,7 @@ swe = np.array(da_mask.get('HDFEOS/GRIDS/Northern Hemisphere/Data Fields/SWE_Nor
 ''' ------------------------------------------------ '''
 
 
-
+np.random.seed(10)
 # mod = xr.open_dataset('MOD09A1.A2003001.h10v05.006.2015153105208.hdf', engine='netcdf4')
 # data = np.array(mod.sur_refl_b01)
 # df = pd.read_csv('h10v05_raster_to_p.txt')
@@ -32,26 +32,38 @@ swe = np.array(da_mask.get('HDFEOS/GRIDS/Northern Hemisphere/Data Fields/SWE_Nor
 # #print(data)
 
 nldas = xr.open_dataset('NLDAS_FORA0125_H.A20000101.0000.002.grb.SUB.nc4', engine='netcdf4')
-data = np.array(nldas.TMP)[0, 0]
+data3d = np.array(nldas.TMP)[0, 0]
 lat = np.array(nldas.lat)
 lon = np.array(nldas.lon)
 
 
+time_axis = 2
+
+data3d = np.dstack([data3d]*10)
+data3d = np.random.rand(224, 464, 10)
+data3d = np.moveaxis(data3d, -1, time_axis)
+
+
+
+
 
 ## TODO: name should change, instantiate with ClipRaster is wierd
-r1 = ClipRaster(data, lat, lon, 0.125)
+r1 = ClipRaster(data3d, lat, lon, 0.125)
 
 
 
 s=time.time()   
 for i in range(1):
-    r1_cliped = r1.clip('shpfiles/ACF_basin.shp', drop=True, scale_factor=50)
+    r1_cliped = r1.clip3d('shpfiles/ACF_basin.shp', time_axis, drop=True, scale_factor=1)
 print("time:", time.time()-s)
 
-print('mean=', r1.get_mean('shpfiles/ACF_basin.shp', scale_factor=100))
+print('mean=', r1.get_mean3d('shpfiles/ACF_basin.shp', time_axis, scale_factor=1))
+
+r2 = ClipRaster(data3d, lat, lon, 0.125)
+print('mean=', r2.get_mean2d('shpfiles/ACF_basin.shp', scale_factor=1))
 
 
-plt.imshow(r1_cliped)
+plt.imshow(r1_cliped[:, :, 4])
 
 
 
