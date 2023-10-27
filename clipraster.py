@@ -42,6 +42,80 @@ class ClipRaster:
         self.cell_size = cell_size
         self.shape = raster.shape
 
+    def mask_shp(self, shp_path: str, scale_factor=1):
+        assert scale_factor >= 1, "scale_factor is less than one"
+        """
+        
+        Parameters
+        ----------
+        shp_path : str
+            path to the shapefile.
+        scale_factor : int, optional
+            higher scale factor will result in higher computational cost but also
+            higher accuracy. The default is 1 which means no downscaling and
+            the center of the pixel must be inside the polygon to be added to 
+            the mask.
+
+        Returns
+        -------
+        mask_original : nparray
+            a mask array in which cells outside the shapefile are zero and the
+            inside cells are the percentage of the area covered by the shapefile.
+
+        """
+        # TODO: assert that the shapefile file has only one shapefile in it.
+        shp = shapefile.Reader(shp_path)
+
+        # Get the polygon vertices of the basin
+        tupVerts = shp.shapes()[0].points
+
+        if scale_factor == 1:
+
+            # Create a mask for the shapefile
+            mask = mask_with_vert_points(tupVerts, self.lat, self.lon)
+
+            mask_original = mask / np.sum(mask)
+
+        else:
+            # Get the boundries of the basin
+            tupVerts_np = np.array(tupVerts)
+            up = np.max(tupVerts_np[:, 1])
+            down = np.min(tupVerts_np[:, 1])
+            left = np.min(tupVerts_np[:, 0])
+            right = np.max(tupVerts_np[:, 0])
+
+            # Create new coordinates for the downscaled grid
+            new_lon = np.arange(left, right, self.cell_size/scale_factor)
+            new_lat = np.arange(down, up, self.cell_size/scale_factor)
+
+            # Create a mask for the shapefile
+            mask = mask_with_vert_points(tupVerts, new_lat, new_lon)
+
+            mask_true = np.where(mask)
+
+            mask_original = np.zeros(self.shape)
+            for i, j in zip(mask_true[0], mask_true[1]):
+
+                if self.lat.ndim == 1:
+                    abs_lat = np.abs(new_lat[i] - self.lat)
+                    arg_lat = np.argmin(abs_lat)
+
+                    abs_lon = np.abs(new_lon[j] - self.lon)
+                    arg_lon = np.argmin(abs_lon)
+
+                if self.lat.ndim == 2:
+                    d = np.sqrt((new_lat[i] - self.lat) **
+                                2 + (new_lon[j] - self.lon)**2)
+                    arg_d = np.where(d == np.nanmin(d))
+                    arg_lat = arg_d[0][0]
+                    arg_lon = arg_d[1][0]
+
+                mask_original[arg_lat, arg_lon] += 1
+
+            mask_original /= np.sum(mask_original)
+
+        return mask_original
+
     def clip2d(self, shp_path: str, scale_factor=1, drop=True):
         """
 
@@ -128,79 +202,7 @@ class ClipRaster:
 
         return raster_cropped
 
-    def mask_shp(self, shp_path: str, scale_factor=1):
-        assert scale_factor >= 1, "scale_factor is less than one"
-        """
-        
-        Parameters
-        ----------
-        shp_path : str
-            path to the shapefile.
-        scale_factor : int, optional
-            higher scale factor will result in higher computational cost but also
-            higher accuracy. The default is 1 which means no downscaling and
-            the center of the pixel must be inside the polygon to be added to 
-            the mask.
 
-        Returns
-        -------
-        mask_original : nparray
-            a mask array in which cells outside the shapefile are zero and the
-            inside cells are the percentage of the area covered by the shapefile.
-
-        """
-        # TODO: assert that the shapefile file has only one shapefile in it.
-        shp = shapefile.Reader(shp_path)
-
-        # Get the polygon vertices of the basin
-        tupVerts = shp.shapes()[0].points
-
-        if scale_factor == 1:
-
-            # Create a mask for the shapefile
-            mask = mask_with_vert_points(tupVerts, self.lat, self.lon)
-
-            mask_original = mask / np.sum(mask)
-
-        else:
-            # Get the boundries of the basin
-            tupVerts_np = np.array(tupVerts)
-            up = np.max(tupVerts_np[:, 1])
-            down = np.min(tupVerts_np[:, 1])
-            left = np.min(tupVerts_np[:, 0])
-            right = np.max(tupVerts_np[:, 0])
-
-            # Create new coordinates for the downscaled grid
-            new_lon = np.arange(left, right, self.cell_size/scale_factor)
-            new_lat = np.arange(down, up, self.cell_size/scale_factor)
-
-            # Create a mask for the shapefile
-            mask = mask_with_vert_points(tupVerts, new_lat, new_lon)
-
-            mask_true = np.where(mask)
-
-            mask_original = np.zeros(self.shape)
-            for i, j in zip(mask_true[0], mask_true[1]):
-
-                if self.lat.ndim == 1:
-                    abs_lat = np.abs(new_lat[i] - self.lat)
-                    arg_lat = np.argmin(abs_lat)
-
-                    abs_lon = np.abs(new_lon[j] - self.lon)
-                    arg_lon = np.argmin(abs_lon)
-
-                if self.lat.ndim == 2:
-                    d = np.sqrt((new_lat[i] - self.lat) **
-                                2 + (new_lon[j] - self.lon)**2)
-                    arg_d = np.where(d == np.nanmin(d))
-                    arg_lat = arg_d[0][0]
-                    arg_lon = arg_d[1][0]
-
-                mask_original[arg_lat, arg_lon] += 1
-
-            mask_original /= np.sum(mask_original)
-
-        return mask_original
 
     def get_mean3d(self, shp_path: str, time_axis: int, scale_factor=1):
         """

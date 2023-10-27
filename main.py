@@ -23,13 +23,16 @@ swe = np.array(da_mask.get('HDFEOS/GRIDS/Northern Hemisphere/Data Fields/SWE_Nor
 
 
 np.random.seed(10)
-# mod = xr.open_dataset('MOD09A1.A2003001.h10v05.006.2015153105208.hdf', engine='netcdf4')
-# data = np.array(mod.sur_refl_b01)
-# df = pd.read_csv('h10v05_raster_to_p.txt')
-# tile = 'h10v05.npy'
-# lon = np.array(df.POINT_X).reshape(2400, 2400)
-# lat = np.array(df.POINT_Y).reshape(2400, 2400)
-# #print(data)
+mod = xr.open_dataset('MOD09A1.A2003001.h10v05.006.2015153105208.hdf', engine='netcdf4')
+print(mod.sur_refl_b01)
+print(np.array(mod.sur_refl_b01).shape)
+
+data = np.array(mod.sur_refl_b01)
+df = pd.read_csv('h10v05_raster_to_p.txt')
+tile = 'h10v05.npy'
+lon = np.array(df.POINT_X).reshape(2400, 2400)
+lat = np.array(df.POINT_Y).reshape(2400, 2400)
+#print(data)
 
 nldas = xr.open_dataset('NLDAS_FORA0125_H.A20000101.0000.002.grb.SUB.nc4', engine='netcdf4')
 data3d = np.array(nldas.TMP)[0, 0]
@@ -59,7 +62,7 @@ print("time:", time.time()-s)
 
 print('mean=', r1.get_mean3d('shpfiles/ACF_basin.shp', time_axis, scale_factor=1))
 
-r2 = ClipRaster(data3d, lat, lon, 0.125)
+r2 = ClipRaster(data3d[:, :, 4], lat, lon, 0.125)
 print('mean=', r2.get_mean2d('shpfiles/ACF_basin.shp', scale_factor=1))
 
 

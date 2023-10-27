@@ -1,0 +1,99 @@
+<PAMDataset>
+  <Subdataset name="MODIS_Swath_Type_GEO:WaterPresent">
+    <PAMDataset>
+      <Metadata>
+        <MDI key="ASSOCIATEDINSTRUMENTSHORTNAME.1">MODIS</MDI>
+        <MDI key="ASSOCIATEDPLATFORMSHORTNAME.1">Terra</MDI>
+        <MDI key="ASSOCIATEDSENSORSHORTNAME.1">MODIS</MDI>
+        <MDI key="Attitude Input Files.1">GRANULE: http://tads1.gesdisc.eosdis.nasa.gov/data/terra_dprep/AM1ANC/2022/365/.hidden/P0420004AAAAAAAAAAAAAA23001023957500.PDS</MDI>
+        <MDI key="Attitude Input Files.2">GRANULE: http://tads1.gesdisc.eosdis.nasa.gov/data/terra_dprep/AM1ANC/2023/001/.hidden/P0420004AAAAAAAAAAAAAA23001050456000.PDS</MDI>
+        <MDI key="AUTOMATICQUALITYFLAG.1">Passed</MDI>
+        <MDI key="AUTOMATICQUALITYFLAGEXPLANATION.1">Set to 'Failed' if processing error occurred, set to 'Passed' otherwise</MDI>
+        <MDI key="band_number">0</MDI>
+        <MDI key="Cumulated gflags">0, 0, 0, 0, 0, 0, 0, 0</MDI>
+        <MDI key="DAYNIGHTFLAG">Night</MDI>
+        <MDI key="DESCRREVISION">6.1</MDI>
+        <MDI key="Discarded Packets">0</MDI>
+        <MDI key="EASTBOUNDINGCOORDINATE">-19.148958670119</MDI>
+        <MDI key="Ephemeris Input Files.1">GRANULE: http://tads1.gesdisc.eosdis.nasa.gov/data/terra_dprep/AM1ANC/2022/365/.hidden/P0420004AAAAAAAAAAAAAA23001023957500.PDS</MDI>
+        <MDI key="Ephemeris Input Files.2">GRANULE: http://tads1.gesdisc.eosdis.nasa.gov/data/terra_dprep/AM1ANC/2023/001/.hidden/P0420004AAAAAAAAAAAAAA23001050456000.PDS</MDI>
+        <MDI key="Ephemeris/Attitude Source">SDP Toolkit</MDI>
+        <MDI key="EQUATORCROSSINGDATE.1">2023-01-01</MDI>
+        <MDI key="EQUATORCROSSINGLONGITUDE.1">142.183888709637</MDI>
+        <MDI key="EQUATORCROSSINGTIME.1">00:43:12.591604</MDI>
+        <MDI key="EXCLUSIONGRINGFLAG.1">N</MDI>
+        <MDI key="GEO_EST_RMS_ERROR">50      </MDI>
+        <MDI key="GEO_EST_RMS_ERROR">50</MDI>
+        <MDI key="GRANULENUMBER">2</MDI>
+        <MDI key="GRINGPOINTLATITUDE.1">23.3938173075347, 20.2569333252201, 37.6301098282838, 41.6567389569733</MDI>
+        <MDI key="GRINGPOINTLONGITUDE.1">-18.9295425183288, -41.2134365772261, -48.2075421159248, -21.495119169184</MDI>
+        <MDI key="GRINGPOINTSEQUENCENO.1">1, 2, 3, 4</MDI>
+        <MDI key="HDFEOSVersion">HDFEOS_V2.19</MDI>
+        <MDI key="HDFEOS_FractionalOffset_mframes*2_MODIS_Swath_Type_GEO">0</MDI>
+        <MDI key="HDFEOS_FractionalOffset_nscans*20_MODIS_Swath_Type_GEO">0.5</MDI>
+        <MDI key="identifier_product_doi">10.5067/MODIS/MOD03.061</MDI>
+        <MDI key="identifier_product_doi">10.5067/MODIS/MOD03.061</MDI>
+        <MDI key="identifier_product_doi_authority">https://doi.org</MDI>
+        <MDI key="identifier_product_doi_authority">https://doi.org</MDI>
+        <MDI key="Incomplete Scans">0</MDI>
+        <MDI key="INPUTPOINTER">MOD01.61.2023-001T00:00:00.000000Z.NA.291092144.500100_1.hdf, MOD03LUT.coeff_V6.1.9, AM1EPHN0.A2022365.2200.002.2023001051422, AM1EPHN0.A2023001.0000.002.2023001065429, AM1ATTN0.A2022365.2200.002.2023001051422, AM1ATTN0.A2023001.0000.002.2023001065429</MDI>
+        <MDI key="LOCALGRANULEID">MOD03.A2023001.0000.061.2023001082151.hdf</MDI>
+        <MDI key="LOCALINPUTGRANULEID">MOD01.A2023001.0000.061.2023001082104.hdf</MDI>
+        <MDI key="LOCALVERSIONID">6.0.4</MDI>
+        <MDI key="LONGNAME">MODIS/Terra Geolocation Fields 5-Min L1A Swath 1km</MDI>
+        <MDI key="Max Earth Frames">1354</MDI>
+        <MDI key="Max SD Frames">50</MDI>
+        <MDI key="Max SV Frames">50</MDI>
+        <MDI key="Missing Packets">0</MDI>
+        <MDI key="NORTHBOUNDINGCOORDINATE">41.4141097563625</MDI>
+        <MDI key="NOT EMPTY19622">NOT EMPTY</MDI>
+        <MDI key="Number of Scans">203</MDI>
+        <MDI key="ORBITNUMBER.1">122540</MDI>
+        <MDI key="Packets with bad CRC">0</MDI>
+        <MDI key="Parameter Version">6.14</MDI>
+        <MDI key="PARAMETERNAME.1">Geolocation</MDI>
+        <MDI key="PGEVERSION">6.1.9</MDI>
+        <MDI key="Polar Motion">0.068060003221035, 0.209564998745918, -0.0172680001705885</MDI>
+        <MDI key="PROCESSINGENVIRONMENT">Linux minion20231 5.4.0-1064-fips #73-Ubuntu SMP Mon Oct 17 18:45:19 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux</MDI>
+        <MDI key="PROCESSVERSION">6.1.0</MDI>
+        <MDI key="PRODUCTIONDATETIME">2023-01-01T08:21:51.000Z</MDI>
+        <MDI key="PRODUCTIONHISTORY">PGE01:6.1.9</MDI>
+        <MDI key="QAPERCENTMISSINGDATA.1">0</MDI>
+        <MDI key="QAPERCENTOUTOFBOUNDSDATA.1">0</MDI>
+        <MDI key="RANGEBEGINNINGDATE">2023-01-01</MDI>
+        <MDI key="RANGEBEGINNINGTIME">00:00:00.000000</MDI>
+        <MDI key="RANGEENDINGDATE">2023-01-01</MDI>
+        <MDI key="RANGEENDINGTIME">00:05:00.000000</MDI>
+        <MDI key="REPROCESSINGACTUAL">processed once</MDI>
+        <MDI key="REPROCESSINGPLANNED">further update is anticipated</MDI>
+        <MDI key="SCIENCEQUALITYFLAG.1">Not Investigated</MDI>
+        <MDI key="SCI_ABNORM">1</MDI>
+        <MDI key="SCI_STATE">1</MDI>
+        <MDI key="SHORTNAME">MOD03</MDI>
+        <MDI key="SOUTHBOUNDINGCOORDINATE">20.27145695433</MDI>
+        <MDI key="Terrain Correction Flag">TRUE</MDI>
+        <MDI key="utcpole File Header">File Updated: 2022-12-16T02:59:40Z, using USNO ser7 finals.data file of Dec  15</MDI>
+        <MDI key="valid_range">0, 8</MDI>
+        <MDI key="VERSIONID">61</MDI>
+        <MDI key="WESTBOUNDINGCOORDINATE">-48.0679862498359</MDI>
+        <MDI key="_FillValue">255</MDI>
+      </Metadata>
+      <Metadata domain="GEOLOCATION">
+        <MDI key="LINE_OFFSET">0</MDI>
+        <MDI key="LINE_STEP">2</MDI>
+        <MDI key="PIXEL_OFFSET">0</MDI>
+        <MDI key="PIXEL_STEP">2</MDI>
+        <MDI key="X_BAND">1</MDI>
+        <MDI key="X_DATASET">HDF4_EOS:EOS_SWATH_GEOL:"C:\Users\kgavahi\Documents\GitHub\clip-raster\MOD03.A2023001.0000.061.2023001082151.hdf":MODIS_Swath_Type_GEO:Longitude</MDI>
+        <MDI key="Y_BAND">1</MDI>
+        <MDI key="Y_DATASET">HDF4_EOS:EOS_SWATH_GEOL:"C:\Users\kgavahi\Documents\GitHub\clip-raster\MOD03.A2023001.0000.061.2023001082151.hdf":MODIS_Swath_Type_GEO:Latitude</MDI>
+      </Metadata>
+      <Metadata domain="OVERVIEWS">
+        <MDI key="OVERVIEW_FILE">:::BASE:::MOD03.A2023001.0000.061.2023001082151.hdf_0.ovr</MDI>
+      </Metadata>
+      <Metadata domain="Esri">
+        <MDI key="PyramidResamplingType">NEAREST</MDI>
+      </Metadata>
+    </PAMDataset>
+  </Subdataset>
+</PAMDataset>
