@@ -2,6 +2,8 @@ import numpy as np
 import shapefile
 from matplotlib.path import Path
 from inpoly import inpoly2
+from numba import jit
+from sklearn.metrics import pairwise_distances_argmin
 
 
 class ClipRaster:
@@ -40,7 +42,16 @@ class ClipRaster:
         self.lat = lat
         self.lon = lon
         self.cell_size = cell_size
-        self.shape = raster.shape
+        
+        
+        # dimensions along lat and lon
+        if lat.ndim == 1:
+    
+            self.shape = (len(lat), len(lon))
+
+        if lat.ndim == 2:
+    
+            self.shape = (lat.shape[0], lat.shape[1])
 
     def mask_shp(self, shp_path: str, scale_factor=1):
         assert scale_factor >= 1, "scale_factor is less than one"
@@ -73,6 +84,7 @@ class ClipRaster:
 
             # Create a mask for the shapefile
             mask = mask_with_vert_points(tupVerts, self.lat, self.lon)
+            mask = mask.reshape(self.shape)
 
             mask_original = mask / np.sum(mask)
 
@@ -87,36 +99,37 @@ class ClipRaster:
             # Create new coordinates for the downscaled grid
             new_lon = np.arange(left, right, self.cell_size/scale_factor)
             new_lat = np.arange(down, up, self.cell_size/scale_factor)
-
+            
+            
             # Create a mask for the shapefile
             mask = mask_with_vert_points(tupVerts, new_lat, new_lon)
-
-            mask_true = np.where(mask)
-
+            
             mask_original = np.zeros(self.shape)
-            for i, j in zip(mask_true[0], mask_true[1]):
+            
+            mask_original = CalW2(mask_original, mask, 
+                                  self.lat, self.lon, 
+                                  new_lat, new_lon, 
+                                  self.shape)            
+            
 
-                if self.lat.ndim == 1:
-                    abs_lat = np.abs(new_lat[i] - self.lat)
-                    arg_lat = np.argmin(abs_lat)
+            # # Create a mask for the shapefile
+            # mask = mask_with_vert_points(tupVerts, new_lat, new_lon)
+            # mask = mask.reshape(new_lat.shape[0], new_lon.shape[0])
 
-                    abs_lon = np.abs(new_lon[j] - self.lon)
-                    arg_lon = np.argmin(abs_lon)
+            # mask_true = np.where(mask)
 
-                if self.lat.ndim == 2:
-                    d = np.sqrt((new_lat[i] - self.lat) **
-                                2 + (new_lon[j] - self.lon)**2)
-                    arg_d = np.where(d == np.nanmin(d))
-                    arg_lat = arg_d[0][0]
-                    arg_lon = arg_d[1][0]
+            # mask_original = np.zeros(self.shape)
+            
+            # mask_original = CalW(mask_original, mask_true, 
+            #                       self.lat, self.lon, new_lat, new_lon)
+            
 
-                mask_original[arg_lat, arg_lon] += 1
 
-            mask_original /= np.sum(mask_original)
 
         return mask_original
 
     def clip2d(self, shp_path: str, scale_factor=1, drop=True):
+        #TODO: also return lat and lons for plotting purposes
         """
 
 
@@ -198,11 +211,36 @@ class ClipRaster:
                             raster_cropped[:, :, ~nan_cols][~nan_rows] if time_axis == 1 else \
                             raster_cropped[:, ~nan_cols, :][~nan_rows]        
         
+            lat_cropped = self.lat[:, ~nan_cols][~nan_rows]
+            lon_cropped = self.lon[:, ~nan_cols][~nan_rows]
+
+        return raster_cropped, lat_cropped, lon_cropped
+
+    def get_mean2d(self, shp_path: str, scale_factor=1):
+        """
+
+
+        Parameters
+        ----------
+        shp_path : str
+            path to the shapefile.
+        scale_factor : int, optional
+            higher scale factor will result in higher computational cost but also
+            higher accuracy. The default is 1 which means no downscaling and
+            the center of the pixel must be inside the polygon to be added to 
+            the mask.
+
+        Returns
+        -------
+        float
+            weighted average of cell values over the shapefile.
+
+        """
+
+        mask = self.mask_shp(shp_path, scale_factor)
         
 
-        return raster_cropped
-
-
+        return np.nansum(mask * self.raster)
 
     def get_mean3d(self, shp_path: str, time_axis: int, scale_factor=1):
         """
@@ -235,34 +273,56 @@ class ClipRaster:
 
         return np.nansum(mask * self.raster, axis=axis_map[time_axis])
 
-    def get_mean2d(self, shp_path: str, scale_factor=1):
-        """
+
+#@jit(nopython=True) # Set "nopython" mode for best performance, equivalent to @njit
+def CalW(mask_original, mask_true, lat, lon, new_lat, new_lon):
+    for i, j in zip(mask_true[0], mask_true[1]):
+        #print(i)
+        if lat.ndim == 1:
+            abs_lat = np.abs(new_lat[i] - lat)
+            arg_lat = np.argmin(abs_lat)
+    
+            abs_lon = np.abs(new_lon[j] - lon)
+            arg_lon = np.argmin(abs_lon)
+    
+        if lat.ndim == 2:
+            d = ((new_lat[i] - lat) **
+                        2 + (new_lon[j] - lon)**2)**0.5
+            arg_d = np.where(d == np.nanmin(d))
+            arg_lat = arg_d[0][0]
+            arg_lon = arg_d[1][0]
+    
+        mask_original[arg_lat, arg_lon] += 1
+    
+    mask_original /= np.sum(mask_original)   
+    
+    return mask_original
 
 
-        Parameters
-        ----------
-        shp_path : str
-            path to the shapefile.
-        scale_factor : int, optional
-            higher scale factor will result in higher computational cost but also
-            higher accuracy. The default is 1 which means no downscaling and
-            the center of the pixel must be inside the polygon to be added to 
-            the mask.
+def CalW2(mask_original, mask, lat, lon, new_lat, new_lon, shape):
 
-        Returns
-        -------
-        float
-            weighted average of cell values over the shapefile.
+    x, y = np.meshgrid(new_lon, new_lat)
+    points = FTranspose(x, y)[mask]
 
-        """
+    points_product = FTranspose(lon, lat)
+    
+    arg_dd = pairwise_distances_argmin(points, points_product)
+    
+    unique, counts = np.unique(arg_dd, return_counts=True)
+    
+    mask_original = mask_original.flatten()
+    
+    mask_original[unique] =+ counts
+    
+    mask_original /= np.sum(mask_original)
+    
+    mask_original = mask_original.reshape(shape)
+    
+    return mask_original
 
-        mask = self.mask_shp(shp_path, scale_factor)
-        
 
-        return np.nansum(mask * self.raster)
-
-def mask_with_vert_points(tupVerts, lat, lon, mode='inpoly'):
-
+def FTranspose(lon, lat):
+   
     if lat.ndim == 1:
 
         x, y = np.meshgrid(lon, lat)
@@ -270,27 +330,35 @@ def mask_with_vert_points(tupVerts, lat, lon, mode='inpoly'):
     if lat.ndim == 2:
         x = lon
         y = lat
+        
+    xf, yf = x.flatten(), y.flatten()
 
-    if mode == 'matplotlib':
-        # Create a mask for the shapefile
-        xf, yf = x.flatten(), y.flatten()
-        points = np.vstack((xf, yf)).T
-        p = Path(tupVerts)  # make a polygon
-        grid = p.contains_points(points)
-        # now you have a mask with points inside a polygon
-        mask = grid.reshape(x.shape[0], x.shape[1])
+    # TODO here can be more optimization
+    #points = np.vstack((xf,yf)).T
+    #points = np.transpose((xf, yf))
+    points = np.column_stack((xf,yf))    
+    
+    return points
+
+
+def mask_with_vert_points(tupVerts, lat, lon, mode='inpoly'):
+
+
+    # if mode == 'matplotlib':
+    #     # Create a mask for the shapefile
+    #     points = FTranspose(lon, lat)
+    #     p = Path(tupVerts)  # make a polygon
+    #     grid = p.contains_points(points)
+    #     # now you have a mask with points inside a polygon
+    #     mask = grid.reshape(x.shape[0], x.shape[1])
 
     if mode == 'inpoly':
 
-        xf, yf = x.flatten(), y.flatten()
-
-        # TODO here can be more optimization
-        #points = np.vstack((xf,yf)).T
-        points = np.transpose((xf, yf))
-        #points = np.column_stack((xf,yf))
+        
+        points = FTranspose(lon, lat)
 
         # use inpoly which lightning fast
         isin, ison = inpoly2(points, tupVerts)
-        mask = isin.reshape(x.shape[0], x.shape[1])
+        #mask = isin.reshape(x.shape[0], x.shape[1])
 
-    return mask
+    return isin
