@@ -108,7 +108,7 @@ from sklearn.metrics import pairwise_distances_argmin
 
 
 # dd = pairwise_distances_argmin(some_pt, a)
-
+from scipy.spatial import KDTree
 
 
 s_total = time.time()
@@ -120,7 +120,12 @@ points_amsr = np.where(points_amsr>10000000, 10000, points_amsr)
 
 s_arg_dd = time.time()
 arg_dd = pairwise_distances_argmin(points, points_amsr)
-print(time.time()-s_arg_dd)
+print('pairwise_distances_argmin', time.time()-s_arg_dd)
+
+s_kd = time.time()
+kdtree = KDTree(points_amsr)
+d, i = kdtree.query(points)
+print('kd', time.time()-s_kd)
 
 unique, counts = np.unique(arg_dd, return_counts=True)
 

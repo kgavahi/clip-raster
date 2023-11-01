@@ -4,7 +4,7 @@ from matplotlib.path import Path
 from inpoly import inpoly2
 from numba import jit
 from sklearn.metrics import pairwise_distances_argmin
-
+from scipy.spatial import KDTree
 
 class ClipRaster:
     """Clip raster class for clipping 2D raster files using a shapefile. 
@@ -35,7 +35,7 @@ class ClipRaster:
         assert isinstance(raster, np.ndarray), "raster is not a numpy array"
         assert isinstance(lat, np.ndarray), "lat is not a numpy array"
         assert isinstance(lon, np.ndarray), "lon is not a numpy array"
-        # TODO add 3D
+        # TODO add Multidimensional >3D
         #assert raster.ndim == 2, "raster must be a 2D array"
 
         self.raster = raster
@@ -69,7 +69,7 @@ class ClipRaster:
 
         Returns
         -------
-        mask_original : nparray
+        weights : nparray
             a mask array in which cells outside the shapefile are zero and the
             inside cells are the percentage of the area covered by the shapefile.
 
@@ -86,7 +86,7 @@ class ClipRaster:
             mask = mask_with_vert_points(tupVerts, self.lat, self.lon)
             mask = mask.reshape(self.shape)
 
-            mask_original = mask / np.sum(mask)
+            weights = mask / np.sum(mask)
 
         else:
             # Get the boundries of the basin
@@ -95,21 +95,24 @@ class ClipRaster:
             down = np.min(tupVerts_np[:, 1])
             left = np.min(tupVerts_np[:, 0])
             right = np.max(tupVerts_np[:, 0])
-
+            
+                
             # Create new coordinates for the downscaled grid
             new_lon = np.arange(left, right, self.cell_size/scale_factor)
             new_lat = np.arange(down, up, self.cell_size/scale_factor)
             
             
             # Create a mask for the shapefile
-            mask = mask_with_vert_points(tupVerts, new_lat, new_lon)
+            mask_new = mask_with_vert_points(tupVerts, new_lat, new_lon)
             
-            mask_original = np.zeros(self.shape)
+            weights = np.zeros(self.shape)
             
-            mask_original = CalW2(mask_original, mask, 
+            weights = CalW2(mask_new, 
                                   self.lat, self.lon, 
                                   new_lat, new_lon, 
-                                  self.shape)            
+                                  self.shape)
+            
+            mask = weights > 0          
             
 
             # # Create a mask for the shapefile
@@ -126,7 +129,7 @@ class ClipRaster:
 
 
 
-        return mask_original
+        return weights, mask
 
     def clip2d(self, shp_path: str, scale_factor=1, drop=True):
         #TODO: also return lat and lons for plotting purposes
@@ -155,18 +158,29 @@ class ClipRaster:
             of shapefile values.
 
         """
-        mask = self.mask_shp(shp_path, scale_factor)
-        mask = mask > 0
+        weights, mask = self.mask_shp(shp_path, scale_factor)
+
 
         raster_cropped = np.where(mask, self.raster, np.nan)
-
+        lat_cropped = self.lat
+        lon_cropped = self.lon
+        
+        
         if drop:
 
             nan_cols = np.all(~mask, axis=0)
             nan_rows = np.all(~mask, axis=1)
             raster_cropped = raster_cropped[:, ~nan_cols][~nan_rows]
 
-        return raster_cropped
+            if self.lat.ndim == 2:
+                lat_cropped = self.lat[:, ~nan_cols][~nan_rows]
+                lon_cropped = self.lon[:, ~nan_cols][~nan_rows]
+
+            if self.lat.ndim == 1:
+                lat_cropped = self.lat[~nan_rows]
+                lon_cropped = self.lon[~nan_cols]
+
+        return raster_cropped, lat_cropped, lon_cropped
 
     def clip3d(self, shp_path: str, time_axis: int, scale_factor=1, drop=True):
         """
@@ -196,13 +210,14 @@ class ClipRaster:
             of shapefile values.
 
         """
-        mask = self.mask_shp(shp_path, scale_factor)
-        mask = mask > 0
+        weights, mask = self.mask_shp(shp_path, scale_factor)
+
 
 
         mask_ex = np.expand_dims(mask, axis=time_axis)
         raster_cropped = np.where(mask_ex, self.raster, np.nan)
-        
+        lat_cropped = self.lat
+        lon_cropped = self.lon
         
         if drop:
             nan_cols = np.all(~mask, axis=0)
@@ -210,9 +225,14 @@ class ClipRaster:
             raster_cropped = raster_cropped[:, :, ~nan_cols][:, ~nan_rows] if time_axis == 0 else \
                             raster_cropped[:, :, ~nan_cols][~nan_rows] if time_axis == 1 else \
                             raster_cropped[:, ~nan_cols, :][~nan_rows]        
-        
-            lat_cropped = self.lat[:, ~nan_cols][~nan_rows]
-            lon_cropped = self.lon[:, ~nan_cols][~nan_rows]
+                            
+            if self.lat.ndim == 2:
+                lat_cropped = self.lat[:, ~nan_cols][~nan_rows]
+                lon_cropped = self.lon[:, ~nan_cols][~nan_rows]
+
+            if self.lat.ndim == 1:
+                lat_cropped = self.lat[~nan_rows]
+                lon_cropped = self.lon[~nan_cols]
 
         return raster_cropped, lat_cropped, lon_cropped
 
@@ -237,10 +257,10 @@ class ClipRaster:
 
         """
 
-        mask = self.mask_shp(shp_path, scale_factor)
+        weights, mask = self.mask_shp(shp_path, scale_factor)
         
 
-        return np.nansum(mask * self.raster)
+        return np.nansum(weights * self.raster)
 
     def get_mean3d(self, shp_path: str, time_axis: int, scale_factor=1):
         """
@@ -263,18 +283,18 @@ class ClipRaster:
 
         """
 
-        mask = self.mask_shp(shp_path, scale_factor)
+        weights, mask = self.mask_shp(shp_path, scale_factor)
         
         # Define the axis mapping for time_axis
         axis_map = {0: (1, 2), 1: (0, 2), 2: (0, 1)}
         
-        mask = np.expand_dims(mask, axis=time_axis)
+        weights = np.expand_dims(weights, axis=time_axis)
         
 
-        return np.nansum(mask * self.raster, axis=axis_map[time_axis])
+        return np.nansum(weights * self.raster, axis=axis_map[time_axis])
 
 
-#@jit(nopython=True) # Set "nopython" mode for best performance, equivalent to @njit
+@jit(nopython=True) # Set "nopython" mode for best performance, equivalent to @njit
 def CalW(mask_original, mask_true, lat, lon, new_lat, new_lon):
     for i, j in zip(mask_true[0], mask_true[1]):
         #print(i)
@@ -299,26 +319,32 @@ def CalW(mask_original, mask_true, lat, lon, new_lat, new_lon):
     return mask_original
 
 
-def CalW2(mask_original, mask, lat, lon, new_lat, new_lon, shape):
-
+def CalW2(mask, lat, lon, new_lat, new_lon, shape):
+    
+    
+    weights = np.zeros(shape)
+    
     x, y = np.meshgrid(new_lon, new_lat)
     points = FTranspose(x, y)[mask]
 
     points_product = FTranspose(lon, lat)
     
-    arg_dd = pairwise_distances_argmin(points, points_product)
+    #arg_dd = pairwise_distances_argmin(points, points_product)
+    
+    kdtree = KDTree(points_product)
+    d, arg_dd = kdtree.query(points)
     
     unique, counts = np.unique(arg_dd, return_counts=True)
     
-    mask_original = mask_original.flatten()
+    weights = weights.flatten()
     
-    mask_original[unique] =+ counts
+    weights[unique] =+ counts
     
-    mask_original /= np.sum(mask_original)
+    weights /= np.sum(weights)
     
-    mask_original = mask_original.reshape(shape)
+    weights = weights.reshape(shape)
     
-    return mask_original
+    return weights
 
 
 def FTranspose(lon, lat):
