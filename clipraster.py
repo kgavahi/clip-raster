@@ -131,6 +131,119 @@ class ClipRaster:
 
         return weights, mask
 
+    def clip(self, shp_path: str, scale_factor=1, drop=True):
+        #TODO: also return lat and lons for plotting purposes
+        """
+
+
+        Parameters
+        ----------
+        shp_path : str
+            path to the shapefile.
+        scale_factor : int, optional
+            higher scale factor will result in higher computational cost but also
+            higher accuracy. If you want to include cells that are covered by 
+            even smaller areas of the shapefile, increase the scale_factor.
+            The default is 1 which means no downscaling and
+            the center of the pixel must be inside the polygon to be added to 
+            the mask.
+        drop : bool, optional
+            if true the margins will be removed to get a smaller raster after clip.
+            if False, the size will not change but outside values will be nan.
+
+        Returns
+        -------
+        raster_cropped : nparray
+            clipped raster using the shapefile with nan values assigned to out
+            of shapefile values.
+
+        """
+        weights, mask = self.mask_shp(shp_path, scale_factor)
+        
+        lat_dim = 0
+        lon_dim = 1
+        
+        dims = np.arange(len(self.raster.shape))
+        
+        dims = tuple(dims[~((dims==lat_dim) | (dims==lon_dim))])
+
+
+
+        
+        mask_ex = np.broadcast_to(np.expand_dims(mask, dims), self.raster.shape)
+        
+        # dd = self.raster[:, :, :, mask, :, :]
+        # print(self.raster.shape)
+        # print(dd.shape)
+        # print(mask.shape)
+        
+
+    
+        
+
+        raster_cropped = np.where(mask_ex, self.raster, np.nan)
+        
+
+        
+        
+        
+        if self.lat.ndim == 1:
+
+            x, y = np.meshgrid(self.lon, self.lat)
+
+        if self.lat.ndim == 2:
+            x = self.lon
+            y = self.lat
+        
+        lat_cropped = np.where(mask, y, np.nan)
+        lon_cropped = np.where(mask, x, np.nan)
+        #TODO: how to add drop=True???
+        
+
+
+        return raster_cropped, lat_cropped, lon_cropped
+    
+    def get_mean(self, shp_path: str, scale_factor=1):
+        """
+
+
+        Parameters
+        ----------
+        shp_path : str
+            path to the shapefile.
+        scale_factor : int, optional
+            higher scale factor will result in higher computational cost but also
+            higher accuracy. The default is 1 which means no downscaling and
+            the center of the pixel must be inside the polygon to be added to 
+            the mask.
+
+        Returns
+        -------
+        float
+            weighted average of cell values over the shapefile.
+
+        """
+
+        weights, mask = self.mask_shp(shp_path, scale_factor)
+        
+        # Define the axis mapping for time_axis
+        lat_dim = 3
+        lon_dim = 4   
+
+        dims = np.arange(len(self.raster.shape))
+        
+        dims = tuple(dims[~((dims==lat_dim) | (dims==lon_dim))])
+
+
+
+        
+        weights = np.broadcast_to(np.expand_dims(weights, dims), self.raster.shape)
+        
+        #weights = np.expand_dims(weights, axis=(lat_dim, lon_dim))
+        
+
+        return np.nansum(weights * self.raster, axis=(lat_dim, lon_dim))
+    
     def clip2d(self, shp_path: str, scale_factor=1, drop=True):
         #TODO: also return lat and lons for plotting purposes
         """
