@@ -14,6 +14,42 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from mpl_toolkits.basemap import Basemap
 import shapefile
+import re
+import pyproj
+
+def mod_lat_lon(mod):
+    fattrs = mod.attrs
+    gridmeta = fattrs["StructMetadata.0"]
+    
+    ul_regex = re.compile(r'''UpperLeftPointMtrs=\(
+                              (?P<upper_left_x>[+-]?\d+\.\d+)
+                              ,
+                              (?P<upper_left_y>[+-]?\d+\.\d+)
+                              \)''', re.VERBOSE)
+    
+    match = ul_regex.search(gridmeta)
+    x0 = float(match.group('upper_left_x'))
+    y0 = float(match.group('upper_left_y'))
+    
+    lr_regex = re.compile(r'''LowerRightMtrs=\(
+                              (?P<lower_right_x>[+-]?\d+\.\d+)
+                              ,
+                              (?P<lower_right_y>[+-]?\d+\.\d+)
+                              \)''', re.VERBOSE)
+    match = lr_regex.search(gridmeta)
+    x1 = float(match.group('lower_right_x'))
+    y1 = float(match.group('lower_right_y'))
+    
+    nx, ny = data[0].shape
+    x = np.linspace(x0, x1, nx)
+    y = np.linspace(y0, y1, ny)
+    xv, yv = np.meshgrid(x, y)
+    
+    sinu = pyproj.Proj("+proj=sinu +R=6371007.181 +nadgrids=@null +wktext")
+    wgs84 = pyproj.Proj("+init=EPSG:4326") 
+    lon, lat= pyproj.transform(sinu, wgs84, xv, yv)    
+    
+    return lat, lon
 
 np.random.seed(10)
 time_axis = 2
@@ -73,47 +109,37 @@ right = np.max(tupVerts_np[:, 0])
 
 
 
-# mod = xr.open_dataset('MOD09A1.A2003001.h10v05.006.2015153105208.hdf', engine='netcdf4')
+mod = xr.open_dataset('MOD09A1.A2003001.h10v05.006.2015153105208.hdf', engine='netcdf4')
 
-# data = np.array(mod.sur_refl_b01)
-# df = pd.read_csv('h10v05_raster_to_p.txt')
-# tile = 'h10v05.npy'
-# lon = np.array(df.POINT_X).reshape(2400, 2400)
-# lat = np.array(df.POINT_Y).reshape(2400, 2400)
-# cell_size = 0.005
-# #print(data)
-# data3d = np.dstack([data]*3)
-# #data3d = np.random.rand(2400, 2400, 3)
-# data3d = np.moveaxis(data3d, -1, time_axis)
+data = np.array(mod.to_array())
 
-
-
-nldas = xr.open_dataset('NLDAS_FORA0125_H.A20000101.0000.002.grb.SUB.nc4', engine='netcdf4')
-data = np.array(nldas.to_array())
-lat = np.array(nldas.lat)
-lon = np.array(nldas.lon)
-cell_size = 0.125
+lat, lon = mod_lat_lon(mod)
+cell_size = 0.005
+#print(data)
 data3d = np.dstack([data]*3)
-#data3d = np.random.rand(224, 464, 3)
+#data3d = np.random.rand(2400, 2400, 3)
 data3d = np.moveaxis(data3d, -1, time_axis)
 
 
-sf=100
+sf=2
+s=time.time()
+r_mod = ClipRaster(data, lat, lon, cell_size)
+r_mean = r_mod.get_mean(shp_path, scale_factor=sf)
+print(time.time()-s)
 
-r_nldas = ClipRaster(data, lat, lon, cell_size)
-r_mean = r_nldas.get_mean(shp_path, scale_factor=sf).ravel()
-weights, landmask = r_nldas.mask_shp(shp_path, scale_factor=sf)
+s=time.time()
+weights, landmask = r_mod.mask_shp(shp_path, scale_factor=sf)
+#dataplot = mod.where(landmask)
+#xr_mean = np.array(dataplot.mean(dim=('YDim:MOD_Grid_500m_Surface_Reflectance'
+#                                      , 'XDim:MOD_Grid_500m_Surface_Reflectance')).to_array())
 
 
-dataplot = nldas.where(landmask)
 
-xr_mean = np.array(dataplot.mean(dim=('lat', 'lon')).to_array()).ravel()
+mod_w = mod * weights
 
-
-nldas_w = nldas * weights
-
-wxr_mean = np.array(nldas_w.sum(dim=('lat', 'lon')).to_array()).ravel()
-
+wxr_mean = np.array(mod_w.sum(dim=('YDim:MOD_Grid_500m_Surface_Reflectance'
+                                      , 'XDim:MOD_Grid_500m_Surface_Reflectance')).to_array()).ravel()
+print(time.time()-s)
 
 m = Basemap(projection='cyl', resolution='l',
             llcrnrlat=down-.1, urcrnrlat =up+.1,
@@ -123,47 +149,85 @@ shp_info = m.readshapefile(shp_path[:-4],'for_amsr',drawbounds=True,
 							   linewidth=1,color='r')             
 
 
-#pcolormesh = m.pcolormesh(lon, lat, data[0, 1, :], latlon=True, cmap='terrain_r')
-pcolormesh = m.pcolormesh(lon, lat, dataplot.TMP[0, 0], latlon=True, cmap='terrain_r')
+pcolormesh = m.pcolormesh(lon, lat, dataplot.sur_refl_b01, latlon=True)
 
 aa
 
-
-data5d = np.array(nldas.to_array())
-
-
-r_nldas = ClipRaster(data3d, lat, lon, cell_size)
-
-r1_cliped, lat_cliped, lon_cliped = r_nldas.clip(shp_path, drop=True, scale_factor=1)
-
-M = r_nldas.get_mean(shp_path, scale_factor=1)
-print(M.shape)
+# nldas = xr.open_dataset('NLDAS_FORA0125_H.A20000101.0000.002.grb.SUB.nc4', engine='netcdf4')
+# data = np.array(nldas.to_array())
+# lat = np.array(nldas.lat)
+# lon = np.array(nldas.lon)
+# cell_size = 0.125
+# data3d = np.dstack([data]*3)
+# #data3d = np.random.rand(224, 464, 3)
+# data3d = np.moveaxis(data3d, -1, time_axis)
 
 
+# sf=100
+
+# r_nldas = ClipRaster(data, lat, lon, cell_size)
+# r_mean = r_nldas.get_mean(shp_path, scale_factor=sf).ravel()
+# weights, landmask = r_nldas.mask_shp(shp_path, scale_factor=sf)
 
 
-m = Basemap(projection='cyl', resolution='l',
-            llcrnrlat=24.523100, urcrnrlat =49.384366,
-            llcrnrlon=-124.763083, urcrnrlon =-66.949894)   
+# dataplot = nldas.where(landmask)
 
-shp_info = m.readshapefile(shp_path[:-4],'for_amsr',drawbounds=True,
-							   linewidth=1,color='r')             
+# xr_mean = np.array(dataplot.mean(dim=('lat', 'lon')).to_array()).ravel()
 
 
-pcolormesh = m.pcolormesh(lon, lat, r1_cliped[0, 0, 0, :, :, 0, 0], latlon=True, cmap='terrain_r')
+# nldas_w = nldas * weights
+
+# wxr_mean = np.array(nldas_w.sum(dim=('lat', 'lon')).to_array()).ravel()
 
 
-size = 0
-try:
-    m.scatter(lon, lat, s=size)
-except:
-    lon, lat = np.meshgrid(lon, lat)
-    m.scatter(lon, lat, s=size)
+# m = Basemap(projection='cyl', resolution='l',
+#             llcrnrlat=down-.1, urcrnrlat =up+.1,
+#             llcrnrlon=left-.1, urcrnrlon =right+.1)    
+
+# shp_info = m.readshapefile(shp_path[:-4],'for_amsr',drawbounds=True,
+# 							   linewidth=1,color='r')             
 
 
-fig = plt.gcf()
+# pcolormesh = m.pcolormesh(lon, lat, dataplot.TMP[0, 0], latlon=True, cmap='terrain_r')
 
-fig.colorbar(pcolormesh)
+# aa
+
+
+# data5d = np.array(nldas.to_array())
+
+
+# r_nldas = ClipRaster(data3d, lat, lon, cell_size)
+
+# r1_cliped, lat_cliped, lon_cliped = r_nldas.clip(shp_path, drop=True, scale_factor=1)
+
+# M = r_nldas.get_mean(shp_path, scale_factor=1)
+# print(M.shape)
+
+
+
+
+# m = Basemap(projection='cyl', resolution='l',
+#             llcrnrlat=24.523100, urcrnrlat =49.384366,
+#             llcrnrlon=-124.763083, urcrnrlon =-66.949894)   
+
+# shp_info = m.readshapefile(shp_path[:-4],'for_amsr',drawbounds=True,
+# 							   linewidth=1,color='r')             
+
+
+# pcolormesh = m.pcolormesh(lon, lat, r1_cliped[0, 0, 0, :, :, 0, 0], latlon=True, cmap='terrain_r')
+
+
+# size = 0
+# try:
+#     m.scatter(lon, lat, s=size)
+# except:
+#     lon, lat = np.meshgrid(lon, lat)
+#     m.scatter(lon, lat, s=size)
+
+
+# fig = plt.gcf()
+
+# fig.colorbar(pcolormesh)
 
 
 

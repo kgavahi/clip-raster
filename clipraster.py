@@ -227,8 +227,8 @@ class ClipRaster:
         weights, mask = self.mask_shp(shp_path, scale_factor)
         
         # Define the axis mapping for time_axis
-        lat_dim = 3
-        lon_dim = 4   
+        lat_dim = 1
+        lon_dim = 2   
 
         dims = np.arange(len(self.raster.shape))
         
