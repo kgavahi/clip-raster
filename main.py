@@ -16,6 +16,7 @@ from mpl_toolkits.basemap import Basemap
 import shapefile
 import re
 import pyproj
+import pygrib
 
 def mod_lat_lon(mod):
     fattrs = mod.attrs
@@ -65,6 +66,45 @@ down = np.min(tupVerts_np[:, 1])
 left = np.min(tupVerts_np[:, 0])
 right = np.max(tupVerts_np[:, 0])
 
+
+
+
+
+grbs = pygrib.open('gfs_4_20110905_0600_000.grb2')
+cell_size = 0.5
+grbs.seek(0)
+for grb in grbs:
+    print(grb)
+
+selected_grb = grbs.select(name='Precipitable water')[0]
+
+data, lat, lon = selected_grb.data()
+
+sf=1
+
+r_gfs = ClipRaster(data, lat, lon, cell_size)
+r_mean = r_gfs.get_mean(shp_path, scale_factor=sf)
+
+weights, landmask = r_gfs.mask_shp(shp_path, scale_factor=sf)
+
+
+
+
+m = Basemap(projection='cyl', resolution='l',
+            llcrnrlat=down-.1, urcrnrlat =up+.1,
+            llcrnrlon=left-.1, urcrnrlon =right+.1)    
+
+shp_info = m.readshapefile(shp_path[:-4],'for_amsr',drawbounds=True,
+							   linewidth=1,color='r')             
+
+
+pcolormesh = m.pcolormesh(lon, lat, data, latlon=True)
+
+fig = plt.gcf()
+
+fig.colorbar(pcolormesh)
+
+aa
 
 
 
@@ -122,16 +162,16 @@ data3d = np.moveaxis(data3d, -1, time_axis)
 
 
 sf=2
-s=time.time()
+
 r_mod = ClipRaster(data, lat, lon, cell_size)
 r_mean = r_mod.get_mean(shp_path, scale_factor=sf)
-print(time.time()-s)
 
-s=time.time()
+
+
 weights, landmask = r_mod.mask_shp(shp_path, scale_factor=sf)
-#dataplot = mod.where(landmask)
-#xr_mean = np.array(dataplot.mean(dim=('YDim:MOD_Grid_500m_Surface_Reflectance'
-#                                      , 'XDim:MOD_Grid_500m_Surface_Reflectance')).to_array())
+dataplot = mod.where(landmask)
+xr_mean = np.array(dataplot.mean(dim=('YDim:MOD_Grid_500m_Surface_Reflectance'
+                                      , 'XDim:MOD_Grid_500m_Surface_Reflectance')).to_array())
 
 
 
@@ -139,7 +179,6 @@ mod_w = mod * weights
 
 wxr_mean = np.array(mod_w.sum(dim=('YDim:MOD_Grid_500m_Surface_Reflectance'
                                       , 'XDim:MOD_Grid_500m_Surface_Reflectance')).to_array()).ravel()
-print(time.time()-s)
 
 m = Basemap(projection='cyl', resolution='l',
             llcrnrlat=down-.1, urcrnrlat =up+.1,
