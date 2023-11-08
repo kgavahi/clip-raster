@@ -16,8 +16,25 @@ from mpl_toolkits.basemap import Basemap
 import shapefile
 import re
 import pyproj
-import pygrib
+#import pygrib
+def FTranspose(lon, lat):
+   
+    if lat.ndim == 1:
 
+        x, y = np.meshgrid(lon, lat)
+
+    if lat.ndim == 2:
+        x = lon
+        y = lat
+        
+    xf, yf = x.flatten(), y.flatten()
+
+    # TODO here can be more optimization
+    #points = np.vstack((xf,yf)).T
+    #points = np.transpose((xf, yf))
+    points = np.column_stack((xf,yf))    
+    
+    return points
 def mod_lat_lon(mod):
     fattrs = mod.attrs
     gridmeta = fattrs["StructMetadata.0"]
@@ -67,69 +84,28 @@ left = np.min(tupVerts_np[:, 0])
 right = np.max(tupVerts_np[:, 0])
 
 
-
-
-
-grbs = pygrib.open('gfs_4_20110905_0600_000.grb2')
-cell_size = 0.5
-grbs.seek(0)
-for grb in grbs:
-    print(grb)
-
-selected_grb = grbs.select(name='Precipitable water')[0]
-
-data, lat, lon = selected_grb.data()
-
-sf=1
-
-r_gfs = ClipRaster(data, lat, lon, cell_size)
-r_mean = r_gfs.get_mean(shp_path, scale_factor=sf)
-
-weights, landmask = r_gfs.mask_shp(shp_path, scale_factor=sf)
+#grbs = xr.open_dataset('gfs_4_20110905_0600_000.grb2', engine='cfgrib')
 
 
 
 
-m = Basemap(projection='cyl', resolution='l',
-            llcrnrlat=down-.1, urcrnrlat =up+.1,
-            llcrnrlon=left-.1, urcrnrlon =right+.1)    
+# grbs = pygrib.open('gfs_4_20110905_0600_000.grb2')
+# cell_size = 0.5
+# grbs.seek(0)
+# for grb in grbs:
+#     print(grb)
 
-shp_info = m.readshapefile(shp_path[:-4],'for_amsr',drawbounds=True,
-							   linewidth=1,color='r')             
+# selected_grb = grbs.select(name='Precipitable water')[0]
 
+# data, lat, lon = selected_grb.data()
 
-pcolormesh = m.pcolormesh(lon, lat, data, latlon=True)
+# sf=1
 
-fig = plt.gcf()
+# r_gfs = ClipRaster(data, lat, lon, cell_size)
+# r_mean = r_gfs.get_mean(shp_path, scale_factor=sf)
 
-fig.colorbar(pcolormesh)
+# weights, landmask = r_gfs.mask_shp(shp_path, scale_factor=sf)
 
-aa
-
-
-
-# ds2011_2014 = xr.open_mfdataset('precip.V1.0.*.nc', concat_dim='time', combine='nested')
-# data = np.array(ds2011_2014.to_array())
-# lat = np.array(ds2011_2014.lat)
-# lon = np.array(ds2011_2014.lon)-360
-# cell_size = 0.25
-
-
-# r_cpc = ClipRaster(data, lat, lon, cell_size)
-# r_mean = r_cpc.get_mean(shp_path, scale_factor=1)
-
-
-# weights, landmask = r_cpc.mask_shp(shp_path, scale_factor=100)
-
-
-# dataplot = ds2011_2014.where(landmask)
-
-# xr_mean = np.array(dataplot.mean(dim=('lat', 'lon')).to_array())
-
-
-# ds2011_2014_w = ds2011_2014 * weights
-
-# wxr_mean = np.array(ds2011_2014_w.sum(dim=('lat', 'lon')).to_array())
 
 
 
@@ -141,44 +117,76 @@ aa
 # 							   linewidth=1,color='r')             
 
 
-# #pcolormesh = m.pcolormesh(lon, lat, data[0, 1, :], latlon=True, cmap='terrain_r')
-# pcolormesh = m.pcolormesh(lon, lat, dataplot.precip[1], latlon=True, cmap='terrain_r')
+# pcolormesh = m.pcolormesh(lon, lat, data, latlon=True)
+
+# fig = plt.gcf()
+
+# fig.colorbar(pcolormesh)
 
 
 
+
+
+# ds2011_2014 = xr.open_mfdataset('precip.V1.0.*.nc', concat_dim='time', combine='nested')
+# ds2011_2014['lon'] = ds2011_2014['lon']-360
+
+# nldas = xr.open_dataset('NLDAS_FORA0125_H.A20000101.0000.002.grb.SUB.nc4', engine='netcdf4')
+# data = np.array(nldas.to_array())
+# lat = np.array(nldas.lat)
+# lon = np.array(nldas.lon)
+
+
+# ds2011_2014_down = ds2011_2014.interp(lat = lat, lon = lon, method='nearest')
+
+
+# print(ds2011_2014_down)
+# print(ds2011_2014)
+
+
+# m = Basemap(projection='cyl', resolution='l',
+#             llcrnrlat=down-.1, urcrnrlat =up+.1,
+#             llcrnrlon=left-.1, urcrnrlon =right+.1)    
+
+# shp_info = m.readshapefile(shp_path[:-4],'for_amsr',drawbounds=True,
+# 							   linewidth=1,color='r')             
+
+
+# pcolormesh = m.pcolormesh(ds2011_2014.lon, ds2011_2014.lat, ds2011_2014.precip[1], 
+#                           latlon=True, cmap='terrain_r')
+
+
+
+
+
+ds2011_2014 = xr.open_mfdataset('precip.V1.0.*.nc', concat_dim='time', combine='nested')
+ds2011_2014['lon'] = ds2011_2014['lon']-360
+data_cpc = np.array(ds2011_2014.to_array())[0, 1].flatten()
+
+x, y = np.meshgrid(ds2011_2014.lon, ds2011_2014.lat)
 
 
 
 mod = xr.open_dataset('MOD09A1.A2003001.h10v05.006.2015153105208.hdf', engine='netcdf4')
-
 data = np.array(mod.to_array())
-
 lat, lon = mod_lat_lon(mod)
-cell_size = 0.005
-#print(data)
-data3d = np.dstack([data]*3)
-#data3d = np.random.rand(2400, 2400, 3)
-data3d = np.moveaxis(data3d, -1, time_axis)
+
+#da_down = da.interp(y = lat, x = lon, method='nearest')
+
+from scipy.spatial import KDTree
 
 
-sf=2
+points = FTranspose(lon, lat)
 
-r_mod = ClipRaster(data, lat, lon, cell_size)
-r_mean = r_mod.get_mean(shp_path, scale_factor=sf)
+points_product = FTranspose(x, y)
 
-
-
-weights, landmask = r_mod.mask_shp(shp_path, scale_factor=sf)
-dataplot = mod.where(landmask)
-xr_mean = np.array(dataplot.mean(dim=('YDim:MOD_Grid_500m_Surface_Reflectance'
-                                      , 'XDim:MOD_Grid_500m_Surface_Reflectance')).to_array())
+kdtree = KDTree(points_product)
+d, arg_dd = kdtree.query(points)
 
 
+datacpc_over_mod = data_cpc[arg_dd].reshape(2400, 2400)
 
-mod_w = mod * weights
-
-wxr_mean = np.array(mod_w.sum(dim=('YDim:MOD_Grid_500m_Surface_Reflectance'
-                                      , 'XDim:MOD_Grid_500m_Surface_Reflectance')).to_array()).ravel()
+mod = mod.assign(cpc=(['YDim:MOD_Grid_500m_Surface_Reflectance',
+                       'XDim:MOD_Grid_500m_Surface_Reflectance'], datacpc_over_mod))
 
 m = Basemap(projection='cyl', resolution='l',
             llcrnrlat=down-.1, urcrnrlat =up+.1,
@@ -188,7 +196,123 @@ shp_info = m.readshapefile(shp_path[:-4],'for_amsr',drawbounds=True,
 							   linewidth=1,color='r')             
 
 
-pcolormesh = m.pcolormesh(lon, lat, dataplot.sur_refl_b01, latlon=True)
+pcolormesh = m.pcolormesh(lon, lat, mod.cpc, latlon=True)
+#pcolormesh = m.pcolormesh(ds2011_2014.lon, ds2011_2014.lat, ds2011_2014.precip[1], latlon=True)
+
+
+
+
+aa
+
+
+
+
+data = np.array(ds2011_2014.to_array())
+lat = np.array(ds2011_2014.lat)
+lon = np.array(ds2011_2014.lon)-360
+cell_size = 0.25
+
+sf = 1
+r_cpc = ClipRaster(data, lat, lon, cell_size)
+r_mean = r_cpc.get_mean(shp_path, scale_factor=sf)
+
+
+weights, landmask = r_cpc.mask_shp(shp_path, scale_factor=sf)
+
+ds2011_2014 = ds2011_2014.assign(landmask=(['lat','lon'], landmask))
+ds2011_2014 = ds2011_2014.assign(weights=(['lat','lon'], weights))
+
+
+
+dataplot = ds2011_2014.where(ds2011_2014.landmask, drop=True)
+
+dataplot.mean(dim=('lat', 'lon')).precip.cumsum().plot()
+################################################################
+sf = 10
+r_cpc = ClipRaster(data, lat, lon, cell_size)
+r_mean = r_cpc.get_mean(shp_path, scale_factor=sf)
+
+
+weights, landmask = r_cpc.mask_shp(shp_path, scale_factor=sf)
+
+dataplot = ds2011_2014 * weights
+
+dataplot.sum(dim=('lat', 'lon')).precip.cumsum().plot()
+
+
+# import geopandas
+# from shapely.geometry import mapping
+# geodf = geopandas.read_file(shp_path)
+# dataplot = ds2011_2014.where(geodf.geometry.apply(mapping))
+
+print(dataplot)
+
+
+xr_mean = np.array(dataplot.mean(dim=('lat', 'lon')).to_array())
+
+
+ds2011_2014_w = ds2011_2014 * weights
+
+wxr_mean = np.array(ds2011_2014_w.sum(dim=('lat', 'lon')).to_array())
+
+
+
+m = Basemap(projection='cyl', resolution='l',
+            llcrnrlat=down-.1, urcrnrlat =up+.1,
+            llcrnrlon=left-.1, urcrnrlon =right+.1)    
+
+shp_info = m.readshapefile(shp_path[:-4],'for_amsr',drawbounds=True,
+							   linewidth=1,color='r')             
+
+
+#pcolormesh = m.pcolormesh(lon, lat, data[0, 1, :], latlon=True, cmap='terrain_r')
+pcolormesh = m.pcolormesh(dataplot.lon, dataplot.lat, dataplot.precip[1], latlon=True, cmap='terrain_r')
+
+aa
+
+
+
+
+# mod = xr.open_dataset('MOD09A1.A2003001.h10v05.006.2015153105208.hdf', engine='netcdf4')
+
+# data = np.array(mod.to_array())
+
+# lat, lon = mod_lat_lon(mod)
+# cell_size = 0.005
+# #print(data)
+# data3d = np.dstack([data]*3)
+# #data3d = np.random.rand(2400, 2400, 3)
+# data3d = np.moveaxis(data3d, -1, time_axis)
+
+
+# sf=2
+
+# r_mod = ClipRaster(data, lat, lon, cell_size)
+# r_mean = r_mod.get_mean(shp_path, scale_factor=sf)
+
+
+
+# weights, landmask = r_mod.mask_shp(shp_path, scale_factor=sf)
+# dataplot = mod.where(landmask)
+# xr_mean = np.array(dataplot.mean(dim=('YDim:MOD_Grid_500m_Surface_Reflectance'
+#                                       , 'XDim:MOD_Grid_500m_Surface_Reflectance')).to_array())
+
+
+
+# mod_w = mod * weights
+
+# wxr_mean = np.array(mod_w.sum(dim=('YDim:MOD_Grid_500m_Surface_Reflectance'
+#                                       , 'XDim:MOD_Grid_500m_Surface_Reflectance')).to_array()).ravel()
+
+# m = Basemap(projection='cyl', resolution='l',
+#             llcrnrlat=down-.1, urcrnrlat =up+.1,
+#             llcrnrlon=left-.1, urcrnrlon =right+.1)    
+
+# shp_info = m.readshapefile(shp_path[:-4],'for_amsr',drawbounds=True,
+# 							   linewidth=1,color='r')             
+
+
+# pcolormesh = m.pcolormesh(lon, lat, dataplot.sur_refl_b01, latlon=True)
 
 aa
 
