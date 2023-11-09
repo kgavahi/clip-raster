@@ -16,6 +16,7 @@ from mpl_toolkits.basemap import Basemap
 import shapefile
 import re
 import pyproj
+from pyproj import Transformer
 #import pygrib
 def FTranspose(lon, lat):
    
@@ -63,9 +64,17 @@ def mod_lat_lon(mod):
     y = np.linspace(y0, y1, ny)
     xv, yv = np.meshgrid(x, y)
     
-    sinu = pyproj.Proj("+proj=sinu +R=6371007.181 +nadgrids=@null +wktext")
-    wgs84 = pyproj.Proj("+init=EPSG:4326") 
-    lon, lat= pyproj.transform(sinu, wgs84, xv, yv)    
+    # sinu = pyproj.Proj("+proj=sinu +R=6371007.181 +nadgrids=@null +wktext")
+    # wgs84 = pyproj.Proj("+init=EPSG:4326") 
+    # lon, lat= pyproj.transform(sinu, wgs84, xv, yv)    
+    
+    transformer = Transformer.from_crs("+proj=sinu +R=6371007.181 +nadgrids=@null +wktext", 
+                                       "+init=EPSG:4326")
+    
+    lon, lat= transformer.transform(xv, yv)
+    
+    
+    
     
     return lat, lon
 
@@ -127,66 +136,21 @@ right = np.max(tupVerts_np[:, 0])
 
 
 
-# ds2011_2014 = xr.open_mfdataset('precip.V1.0.*.nc', concat_dim='time', combine='nested')
-# ds2011_2014['lon'] = ds2011_2014['lon']-360
-
-# nldas = xr.open_dataset('NLDAS_FORA0125_H.A20000101.0000.002.grb.SUB.nc4', engine='netcdf4')
-# data = np.array(nldas.to_array())
-# lat = np.array(nldas.lat)
-# lon = np.array(nldas.lon)
-
-
-# ds2011_2014_down = ds2011_2014.interp(lat = lat, lon = lon, method='nearest')
-
-
-# print(ds2011_2014_down)
-# print(ds2011_2014)
-
-
-# m = Basemap(projection='cyl', resolution='l',
-#             llcrnrlat=down-.1, urcrnrlat =up+.1,
-#             llcrnrlon=left-.1, urcrnrlon =right+.1)    
-
-# shp_info = m.readshapefile(shp_path[:-4],'for_amsr',drawbounds=True,
-# 							   linewidth=1,color='r')             
-
-
-# pcolormesh = m.pcolormesh(ds2011_2014.lon, ds2011_2014.lat, ds2011_2014.precip[1], 
-#                           latlon=True, cmap='terrain_r')
-
-
-
-
-
 ds2011_2014 = xr.open_mfdataset('precip.V1.0.*.nc', concat_dim='time', combine='nested')
 ds2011_2014['lon'] = ds2011_2014['lon']-360
-data_cpc = np.array(ds2011_2014.to_array())[0, 1].flatten()
 
-x, y = np.meshgrid(ds2011_2014.lon, ds2011_2014.lat)
-
-
-
-mod = xr.open_dataset('MOD09A1.A2003001.h10v05.006.2015153105208.hdf', engine='netcdf4')
-data = np.array(mod.to_array())
-lat, lon = mod_lat_lon(mod)
-
-#da_down = da.interp(y = lat, x = lon, method='nearest')
-
-from scipy.spatial import KDTree
+nldas = xr.open_dataset('NLDAS_FORA0125_H.A20000101.0000.002.grb.SUB.nc4', engine='netcdf4')
+data = np.array(nldas.to_array())
+lat = np.array(nldas.lat)
+lon = np.array(nldas.lon)
 
 
-points = FTranspose(lon, lat)
+ds2011_2014_down = ds2011_2014.interp(lat = lat, lon = lon, method='nearest')
 
-points_product = FTranspose(x, y)
-
-kdtree = KDTree(points_product)
-d, arg_dd = kdtree.query(points)
+mrg = xr.merge([nldas, ds2011_2014_down])
 
 
-datacpc_over_mod = data_cpc[arg_dd].reshape(2400, 2400)
 
-mod = mod.assign(cpc=(['YDim:MOD_Grid_500m_Surface_Reflectance',
-                       'XDim:MOD_Grid_500m_Surface_Reflectance'], datacpc_over_mod))
 
 m = Basemap(projection='cyl', resolution='l',
             llcrnrlat=down-.1, urcrnrlat =up+.1,
@@ -196,8 +160,55 @@ shp_info = m.readshapefile(shp_path[:-4],'for_amsr',drawbounds=True,
 							   linewidth=1,color='r')             
 
 
-pcolormesh = m.pcolormesh(lon, lat, mod.cpc, latlon=True)
-#pcolormesh = m.pcolormesh(ds2011_2014.lon, ds2011_2014.lat, ds2011_2014.precip[1], latlon=True)
+pcolormesh = m.pcolormesh(mrg.lon, mrg.lat, mrg.APCP[1], 
+                          latlon=True, cmap='terrain_r')
+
+
+aa
+
+
+# ds2011_2014 = xr.open_mfdataset('precip.V1.0.*.nc', concat_dim='time', combine='nested')
+# ds2011_2014['lon'] = ds2011_2014['lon']-360
+# data_cpc = np.array(ds2011_2014.to_array())[0, 1].flatten()
+
+# x, y = np.meshgrid(ds2011_2014.lon, ds2011_2014.lat)
+
+
+
+# mod = xr.open_dataset('MOD16A2.A2023297.h11v05.061.2023313003400.hdf', engine='netcdf4')
+# data = np.array(mod.to_array())
+# lat, lon = mod_lat_lon(mod)
+
+
+
+# #da_down = da.interp(y = lat, x = lon, method='nearest')
+
+# from scipy.spatial import KDTree
+
+
+# points = FTranspose(lon, lat)
+
+# points_product = FTranspose(x, y)
+
+# kdtree = KDTree(points_product)
+# d, arg_dd = kdtree.query(points)
+
+
+# datacpc_over_mod = data_cpc[arg_dd].reshape(2400, 2400)
+
+# mod = mod.assign(cpc=(['YDim:MOD_Grid_500m_Surface_Reflectance',
+#                        'XDim:MOD_Grid_500m_Surface_Reflectance'], datacpc_over_mod))
+
+# m = Basemap(projection='cyl', resolution='l',
+#             llcrnrlat=down-30, urcrnrlat =up+30,
+#             llcrnrlon=left-30, urcrnrlon =right+30)    
+
+# shp_info = m.readshapefile(shp_path[:-4],'for_amsr',drawbounds=True,
+# 							   linewidth=1,color='r')             
+
+# pcolormesh = m.pcolormesh(lon, lat, mod.cpc, latlon=True)
+# #pcolormesh = m.pcolormesh(x, y, ds2011_2014.precip[1], latlon=True)
+# #pcolormesh = m.pcolormesh(ds2011_2014.lon, ds2011_2014.lat, ds2011_2014.precip[1], latlon=True)
 
 
 
