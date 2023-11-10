@@ -13,9 +13,13 @@ import numpy as np
 
 
 
+x = xr.Dataset(
+    {
+        "temperature": ("station", 20 * np.random.rand(4)),
+        "pressure": ("station", 500 * np.random.rand(4)),
+    },
+    coords={"station": ["boston", "nyc", "seattle", "denver"]},
+)
 
-ds1 = xr.Dataset({"a": ("x", [10, 20, 30, np.nan])}, {"x": [1, 2, 3, 4]})
-
-ds2 = xr.Dataset({"b": ("x", [np.nan, 30, 40, 50])}, {"x": [2, 3, 4, 5]})
-
-xr.merge([ds1, ds2])
+new_index = ["boston", "austin", "seattle", "lincoln"]
+y = x.reindex({"station": new_index})

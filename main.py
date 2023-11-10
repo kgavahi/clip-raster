@@ -136,32 +136,43 @@ right = np.max(tupVerts_np[:, 0])
 
 
 
-ds2011_2014 = xr.open_mfdataset('precip.V1.0.*.nc', concat_dim='time', combine='nested')
-ds2011_2014['lon'] = ds2011_2014['lon']-360
+ds_nldas = xr.open_mfdataset('NLDAS/*.nc4', concat_dim='time', combine='nested')
 
-nldas = xr.open_dataset('NLDAS_FORA0125_H.A20000101.0000.002.grb.SUB.nc4', engine='netcdf4')
-data = np.array(nldas.to_array())
-lat = np.array(nldas.lat)
-lon = np.array(nldas.lon)
+time_range = pd.date_range('2000-01-01T00:00:00.000000000', '2000-01-01T06:00:00.000000000', freq='H')
 
+y = ds_nldas.reindex({"time": time_range})
 
-ds2011_2014_down = ds2011_2014.interp(lat = lat, lon = lon, method='nearest')
-
-mrg = xr.merge([nldas, ds2011_2014_down])
+print(y)
 
 
+aa
+
+# ds2011_2014 = xr.open_mfdataset('precip.V1.0.*.nc', concat_dim='time', combine='nested')
+# ds2011_2014['lon'] = ds2011_2014['lon']-360
+
+# nldas = xr.open_dataset('NLDAS_FORA0125_H.A20000101.0000.002.grb.SUB.nc4', engine='netcdf4')
+# data = np.array(nldas.to_array())
+# lat = np.array(nldas.lat)
+# lon = np.array(nldas.lon)
 
 
-m = Basemap(projection='cyl', resolution='l',
-            llcrnrlat=down-.1, urcrnrlat =up+.1,
-            llcrnrlon=left-.1, urcrnrlon =right+.1)    
+# ds2011_2014_down = ds2011_2014.interp(lat = lat, lon = lon, method='nearest')
 
-shp_info = m.readshapefile(shp_path[:-4],'for_amsr',drawbounds=True,
-							   linewidth=1,color='r')             
+# mrg = xr.merge([nldas, ds2011_2014_down])
 
 
-pcolormesh = m.pcolormesh(mrg.lon, mrg.lat, mrg.APCP[1], 
-                          latlon=True, cmap='terrain_r')
+
+
+# m = Basemap(projection='cyl', resolution='l',
+#             llcrnrlat=down-.1, urcrnrlat =up+.1,
+#             llcrnrlon=left-.1, urcrnrlon =right+.1)    
+
+# shp_info = m.readshapefile(shp_path[:-4],'for_amsr',drawbounds=True,
+# 							   linewidth=1,color='r')             
+
+
+# pcolormesh = m.pcolormesh(mrg.lon, mrg.lat, mrg.APCP[1], 
+#                           latlon=True, cmap='terrain_r')
 
 
 aa
