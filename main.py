@@ -135,14 +135,77 @@ right = np.max(tupVerts_np[:, 0])
 
 
 
-
+chirps = xr.open_dataset('chirps-v2.0.2011.days_p05.nc')
 ds_nldas = xr.open_mfdataset('NLDAS/*.nc4', concat_dim='time', combine='nested')
 
-time_range = pd.date_range('2000-01-01T00:00:00.000000000', '2000-01-01T06:00:00.000000000', freq='H')
 
-y = ds_nldas.reindex({"time": time_range})
+nldas_down = ds_nldas.interp(lat = chirps.latitude, lon = chirps.longitude, method='nearest')
 
-print(y)
+
+
+
+print(chirps)
+lon = np.array(chirps.longitude)
+lat = np.array(chirps.latitude)
+tmax = np.array(chirps.precip[0])
+
+
+m = Basemap(projection='cyl', resolution='l',
+            llcrnrlat=down-6, urcrnrlat =up+1,
+            llcrnrlon=left-10, urcrnrlon =right+10)    
+
+shp_info = m.readshapefile(shp_path[:-4],'for_amsr',drawbounds=True,
+							   linewidth=1,color='r')             
+
+
+# pcolormesh = m.pcolormesh(lon, lat, tmax, 
+#                           latlon=True)
+
+# pcolormesh = m.pcolormesh(ds_nldas.lon, ds_nldas.lat, ds_nldas.TMP[0,0], 
+#                           latlon=True, cmap='terrain_r')
+
+pcolormesh = m.pcolormesh(nldas_down.lon, nldas_down.lat, nldas_down.TMP[0,0], 
+                          latlon=False, cmap='terrain_r')
+
+
+
+
+
+
+# import urllib.request
+# for yr in range(2011,2012): # note that in python, the end range is not inclusive. So, in this case data for 2015 is not downloaded.
+#     url = f'https://thredds.daac.ornl.gov/thredds/fileServer/ornldaac/2129/daymet_v4_daily_na_tmax_{yr}.nc'
+#     savename = url.split('/')[-1]
+#     urllib.request.urlretrieve(url,savename)
+    
+aa
+# daymet = xr.open_dataset('daymet_v4_daily_na_tmax_2011.nc')
+
+# lon = np.array(daymet.lon)
+# lat = np.array(daymet.lat)
+# tmax = np.array(daymet.tmax[0])
+
+
+# m = Basemap(projection='cyl', resolution='l',
+#             llcrnrlat=down-50, urcrnrlat =up+50,
+#             llcrnrlon=left-50, urcrnrlon =right+50)    
+
+# shp_info = m.readshapefile(shp_path[:-4],'for_amsr',drawbounds=True,
+# 							   linewidth=1,color='r')             
+
+
+# pcolormesh = m.pcolormesh(lon, lat, tmax, 
+#                           latlon=True, cmap='terrain_r')
+
+aa
+
+# ds_nldas = xr.open_mfdataset('NLDAS/*.nc4', concat_dim='time', combine='nested')
+
+# time_range = pd.date_range('2000-01-01T00:00:00.000000000', '2000-01-01T06:00:00.000000000', freq='H')
+
+# y = ds_nldas.reindex({"time": time_range})
+
+# print(y)
 
 
 aa
