@@ -134,7 +134,7 @@ right = np.max(tupVerts_np[:, 0])
 
 
 
-
+daymet = xr.open_dataset('daymet_v4_daily_na_tmax_2011.nc')
 chirps = xr.open_dataset('chirps-v2.0.2011.days_p05.nc')
 
 ds_nldas = xr.open_mfdataset('NLDAS/*.nc4', concat_dim='time', combine='nested')
@@ -148,6 +148,9 @@ nldas_down = ds_nldas.interp(lat = chirps.latitude,
                              lon = chirps.longitude, 
                              method='nearest')
 
+daymet_up = daymet.interp(lat = chirps.latitude, 
+                             lon = chirps.longitude, 
+                             method='nearest')
 
 
 
@@ -165,14 +168,18 @@ shp_info = m.readshapefile(shp_path[:-4],'for_amsr',drawbounds=True,
 							   linewidth=1,color='r')             
 
 
+pcolormesh = m.pcolormesh(np.array(daymet.lon), np.array(daymet.lat), daymet.tmax[0], 
+                          latlon=True, cmap='terrain_r', vmin=285, vmax=300)
+
+
 # pcolormesh = m.pcolormesh(lon, lat, tmax, 
 #                           latlon=True)
 
 # pcolormesh = m.pcolormesh(ds_nldas.lon, ds_nldas.lat, ds_nldas.TMP[0,0], 
 #                           latlon=True, cmap='terrain_r', vmin=285, vmax=300)
 
-pcolormesh = m.pcolormesh(nldas_down.lon, nldas_down.lat, nldas_down.TMP[0,0], 
-                          latlon=True, cmap='terrain_r', vmin=285, vmax=300)
+# pcolormesh = m.pcolormesh(nldas_down.lon, nldas_down.lat, nldas_down.TMP[0,0], 
+#                           latlon=True, cmap='terrain_r', vmin=285, vmax=300)
 
 fig = plt.gcf()
 
