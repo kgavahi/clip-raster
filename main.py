@@ -148,16 +148,16 @@ nldas_down = ds_nldas.interp(lat = chirps.latitude,
                              lon = chirps.longitude, 
                              method='nearest')
 
-daymet_up = daymet.interp(lat = chirps.latitude, 
-                             lon = chirps.longitude, 
-                             method='nearest')
+chirps_up = chirps.interp(latitude = ds_nldas.lat, 
+                             longitude = ds_nldas.lon, 
+                             method='linear')
 
 
 
 print(chirps)
-lon = np.array(chirps.longitude)
-lat = np.array(chirps.latitude)
-tmax = np.array(chirps.precip[0])
+lon = np.array(chirps_up.longitude)
+lat = np.array(chirps_up.latitude)
+tmax = np.array(chirps_up.precip[0])
 
 
 m = Basemap(projection='cyl', resolution='l',
@@ -168,9 +168,12 @@ shp_info = m.readshapefile(shp_path[:-4],'for_amsr',drawbounds=True,
 							   linewidth=1,color='r')             
 
 
-pcolormesh = m.pcolormesh(np.array(daymet.lon), np.array(daymet.lat), daymet.tmax[0], 
-                          latlon=True, cmap='terrain_r', vmin=285, vmax=300)
+# pcolormesh = m.pcolormesh(np.array(daymet.lon), np.array(daymet.lat), daymet.tmax[0], 
+#                           latlon=True, cmap='terrain_r', vmin=285, vmax=300)
 
+
+pcolormesh = m.pcolormesh(lon, lat, tmax, 
+                          latlon=True)
 
 # pcolormesh = m.pcolormesh(lon, lat, tmax, 
 #                           latlon=True)
