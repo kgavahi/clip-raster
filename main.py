@@ -148,6 +148,11 @@ nldas_down = ds_nldas.interp(lat = chirps.latitude,
                              lon = chirps.longitude, 
                              method='nearest')
 
+daymet_down = daymet.interp(lat = daymet.lat, 
+                             lon = daymet.lon, 
+                             method='nearest')
+
+
 chirps_up = chirps.interp(latitude = ds_nldas.lat, 
                              longitude = ds_nldas.lon, 
                              method='linear')
