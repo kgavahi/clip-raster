@@ -17,7 +17,45 @@ import shapefile
 import re
 import pyproj
 from pyproj import Transformer
+import os
+import shutil
+import requests
 #import pygrib
+
+
+def dl_dataset(url):
+    #url = 'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGDF.07/2022/01/3B-DAY.MS.MRG.3IMERG.20220101-S000000-E235959.V07.nc4'
+    saveName = url.split('/')[-1].strip()
+    #urllib.request.urlretrieve(url, saveName)
+    
+    
+    
+    pathNetrc = os.path.join(os.path.expanduser("~"),'.netrc')
+    if os.path.exists(pathNetrc):
+        os.remove(pathNetrc)
+        
+    netrcFile = ['machine urs.earthdata.nasa.gov','login ' + 'kgavahi','password '+'491Newyork']
+    with open('.netrc', 'w') as f:
+        for item in netrcFile:
+            f.write("%s\n" % item)
+        
+    shutil.copy('.netrc',os.path.expanduser("~"))
+    
+    
+    with requests.get(url.strip(), stream=True) as response:
+        if response.status_code != 200:
+            print("Verify that your username and password are correct")
+        else:
+            response.raw.decode_content = True
+            content = response.raw
+            with open(saveName, 'wb') as d:
+                while True:
+                    chunk = content.read(16 * 1024)
+                    if not chunk:
+                        break
+                    d.write(chunk)
+            print('Downloaded file: {}'.format(saveName))
+
 def FTranspose(lon, lat):
    
     if lat.ndim == 1:
@@ -169,13 +207,23 @@ right = np.max(tupVerts_np[:, 0])
 #                 d.write(chunk)
 #         print('Downloaded file: {}'.format(saveName))
 
+url = 'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGDF.07/2022/01/3B-DAY.MS.MRG.3IMERG.20220101-S000000-E235959.V07.nc4'
+url = 'https://hydro1.gesdisc.eosdis.nasa.gov/data/NLDAS/NLDAS_FORA0125_H.002/2023/001/NLDAS_FORA0125_H.A20230101.0000.002.grb'
 
+dl_dataset(url)
+
+os.system("wget --load-cookies C:\.urs_cookies --save-cookies C:\.urs_cookies --auth-no-challenge=on -P 22 --keep-session-cookies --content-disposition -i links.txt")
+
+
+aa
 
 daymet = xr.open_dataset('daymet_v4_daily_na_tmax_2011.nc')
 chirps = xr.open_dataset('chirps-v2.0.2011.days_p05.nc')
 imerg = xr.open_dataset('3B-DAY.MS.MRG.3IMERG.20220101-S000000-E235959.V07.nc4')
-
 ds_nldas = xr.open_mfdataset('NLDAS/*.nc4', concat_dim='time', combine='nested')
+
+
+
 
 chirps = chirps.isel(longitude=(chirps.longitude >= ds_nldas.lon.min()) & (chirps.longitude <= ds_nldas.lon.max()),
                           latitude=(chirps.latitude >= ds_nldas.lat.min()) & (chirps.latitude <= ds_nldas.lat.max()),
