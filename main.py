@@ -133,9 +133,47 @@ right = np.max(tupVerts_np[:, 0])
 # fig.colorbar(pcolormesh)
 
 
+# import os
+# import urllib.request
+# import requests
+# import shutil
+# url = 'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGDF.07/2022/01/3B-DAY.MS.MRG.3IMERG.20220101-S000000-E235959.V07.nc4'
+# saveName = url.split('/')[-1].strip()
+# #urllib.request.urlretrieve(url, saveName)
+
+
+
+# pathNetrc = os.path.join(os.path.expanduser("~"),'.netrc')
+# if os.path.exists(pathNetrc):
+#     os.remove(pathNetrc)
+    
+# netrcFile = ['machine urs.earthdata.nasa.gov','login ' + 'kgavahi','password '+'491Newyork']
+# with open('.netrc', 'w') as f:
+#     for item in netrcFile:
+#         f.write("%s\n" % item)
+    
+# shutil.copy('.netrc',os.path.expanduser("~"))
+
+
+# with requests.get(url.strip(), stream=True) as response:
+#     if response.status_code != 200:
+#         print("Verify that your username and password are correct")
+#     else:
+#         response.raw.decode_content = True
+#         content = response.raw
+#         with open(saveName, 'wb') as d:
+#             while True:
+#                 chunk = content.read(16 * 1024)
+#                 if not chunk:
+#                     break
+#                 d.write(chunk)
+#         print('Downloaded file: {}'.format(saveName))
+
+
 
 daymet = xr.open_dataset('daymet_v4_daily_na_tmax_2011.nc')
 chirps = xr.open_dataset('chirps-v2.0.2011.days_p05.nc')
+imerg = xr.open_dataset('3B-DAY.MS.MRG.3IMERG.20220101-S000000-E235959.V07.nc4')
 
 ds_nldas = xr.open_mfdataset('NLDAS/*.nc4', concat_dim='time', combine='nested')
 
@@ -148,8 +186,8 @@ nldas_down = ds_nldas.interp(lat = chirps.latitude,
                              lon = chirps.longitude, 
                              method='nearest')
 
-daymet_down = daymet.interp(lat = daymet.lat, 
-                             lon = daymet.lon, 
+imerg_down = imerg.interp(lat = chirps.latitude, 
+                             lon = chirps.longitude, 
                              method='nearest')
 
 
@@ -166,19 +204,27 @@ tmax = np.array(chirps_up.precip[0])
 
 
 m = Basemap(projection='cyl', resolution='l',
-            llcrnrlat=down-1, urcrnrlat =up-1,
-            llcrnrlon=left-8, urcrnrlon =right-5)    
+            llcrnrlat=down+5, urcrnrlat =up+5,
+            llcrnrlon=left, urcrnrlon =right)    
 
 shp_info = m.readshapefile(shp_path[:-4],'for_amsr',drawbounds=True,
 							   linewidth=1,color='r')             
+
+
+
+pcolormesh = m.pcolormesh(imerg.lon, imerg.lat, imerg.precipitation[0].T, 
+                          latlon=True, vmin=0, vmax=100)
+
+# pcolormesh = m.pcolormesh(imerg_down.lon, imerg_down.lat, imerg_down.precipitation[0].T, 
+#                           latlon=True, vmin=0, vmax=100)
 
 
 # pcolormesh = m.pcolormesh(np.array(daymet.lon), np.array(daymet.lat), daymet.tmax[0], 
 #                           latlon=True, cmap='terrain_r', vmin=285, vmax=300)
 
 
-pcolormesh = m.pcolormesh(lon, lat, tmax, 
-                          latlon=True)
+# pcolormesh = m.pcolormesh(lon, lat, tmax, 
+#                           latlon=True)
 
 # pcolormesh = m.pcolormesh(lon, lat, tmax, 
 #                           latlon=True)
