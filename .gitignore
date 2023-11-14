@@ -1,0 +1,13 @@
+*.hdf
+*.txt
+*.csv
+*.sav
+*.nc
+*.nc4
+*.grb2
+*.idx
+*.npy
+*.he5
+
+.netrc
+.urs_cookies
