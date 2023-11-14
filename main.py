@@ -20,7 +20,7 @@ from pyproj import Transformer
 import os
 import shutil
 import requests
-#import pygrib
+import pygrib
 
 
 def dl_dataset(url):
@@ -50,7 +50,7 @@ def dl_dataset(url):
             content = response.raw
             with open(saveName, 'wb') as d:
                 while True:
-                    chunk = content.read(16 * 1024)
+                    chunk = content.read(1024 * 1024)
                     if not chunk:
                         break
                     d.write(chunk)
@@ -207,10 +207,40 @@ right = np.max(tupVerts_np[:, 0])
 #                 d.write(chunk)
 #         print('Downloaded file: {}'.format(saveName))
 
-url = 'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGDF.07/2022/01/3B-DAY.MS.MRG.3IMERG.20220101-S000000-E235959.V07.nc4'
-url = 'https://hydro1.gesdisc.eosdis.nasa.gov/data/NLDAS/NLDAS_FORA0125_H.002/2023/001/NLDAS_FORA0125_H.A20230101.0000.002.grb'
+#url = 'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGDF.07/2022/01/3B-DAY.MS.MRG.3IMERG.20220101-S000000-E235959.V07.nc4'
+#url = 'https://hydro1.gesdisc.eosdis.nasa.gov/data/NLDAS/NLDAS_FORA0125_H.002/2023/001/NLDAS_FORA0125_H.A20230101.0000.002.grb'
 #url = "http://e4ftl01.cr.usgs.gov/MOLA/MYD17A3H.006/2009.01.01/MYD17A3H.A2009001.h12v05.006.2015198130546.hdf.xml"
-dl_dataset(url)
+
+
+
+# url = 'https://data.chc.ucsb.edu/products/CHIRPS-2.0/global_daily/netcdf/p05/by_month/chirps-v2.0.2023.09.days_p05.nc'
+
+# dl_dataset(url)
+
+# url = 'https://hydro1.gesdisc.eosdis.nasa.gov/data/NLDAS/NLDAS_FORA0125_H.002/2023/001/NLDAS_FORA0125_H.A20230101.0000.002.grb'
+
+# dl_dataset(url)
+
+
+ds_nldas = xr.open_mfdataset('NLDAS/*.nc4', concat_dim='time', combine='nested')
+grbs = pygrib.open('NLDAS_FORA0125_H.A20230101.0000.002.grb')
+
+
+
+grbs.seek(0)
+for grb in grbs:
+    print(grb)
+    print(grb.data()[0])
+    
+    aa
+
+selected_grb = grbs.select(11)[0]
+
+# data, lat, lon = selected_grb.data()
+
+
+
+
 aa
 os.system("wget --load-cookies C:\.urs_cookies --save-cookies C:\.urs_cookies --auth-no-challenge=on -P 22 --keep-session-cookies --content-disposition -i links.txt")
 

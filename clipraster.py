@@ -501,3 +501,7 @@ def mask_with_vert_points(tupVerts, lat, lon, mode='inpoly'):
         #mask = isin.reshape(x.shape[0], x.shape[1])
 
     return isin
+
+def open_raster(raster, lat, lon, cell_size):
+    cr = ClipRaster(raster, lat, lon, cell_size)
+    return cr
