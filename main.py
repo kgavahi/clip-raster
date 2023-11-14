@@ -209,11 +209,11 @@ right = np.max(tupVerts_np[:, 0])
 
 url = 'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGDF.07/2022/01/3B-DAY.MS.MRG.3IMERG.20220101-S000000-E235959.V07.nc4'
 url = 'https://hydro1.gesdisc.eosdis.nasa.gov/data/NLDAS/NLDAS_FORA0125_H.002/2023/001/NLDAS_FORA0125_H.A20230101.0000.002.grb'
-
+#url = "http://e4ftl01.cr.usgs.gov/MOLA/MYD17A3H.006/2009.01.01/MYD17A3H.A2009001.h12v05.006.2015198130546.hdf.xml"
 dl_dataset(url)
-
+aa
 os.system("wget --load-cookies C:\.urs_cookies --save-cookies C:\.urs_cookies --auth-no-challenge=on -P 22 --keep-session-cookies --content-disposition -i links.txt")
-..
+
 
 aa
 
