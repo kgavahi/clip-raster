@@ -8,6 +8,8 @@
 *.idx
 *.npy
 *.he5
+*NLDAS
+*MCD
 
 .netrc
 .urs_cookies
