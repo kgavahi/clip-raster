@@ -60,7 +60,7 @@ class DataPreprocess:
         
         
         
-dp = DataPreprocess('20230101', 'kgavahi', '491Newyork')
+dp = DataPreprocess('20240212', 'kgavahi', '491Newyork')
 dp.dl_nldas('NLDAS')
         
         
