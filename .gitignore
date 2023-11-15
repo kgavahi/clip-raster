@@ -10,6 +10,7 @@
 *.he5
 *NLDAS
 *MCD
+*.pdf
 
 .netrc
 .urs_cookies
