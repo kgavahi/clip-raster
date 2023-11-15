@@ -1,8 +1,8 @@
 import os
 import datetime
-
-
-
+import requests
+import shutil
+import xarray as xr
 
 
 
@@ -22,6 +22,20 @@ class DataPreprocess:
         self.user = user
         self.password = password
         
+        # Create the .netrc file for authentication
+        pathNetrc = os.path.join(os.path.expanduser("~"),'.netrc')
+        if os.path.exists(pathNetrc):
+            os.remove(pathNetrc)
+            
+        netrcFile = ['machine urs.earthdata.nasa.gov',
+                      'login ' + self.user,
+                      'password '+self.password]
+        
+        with open('.netrc', 'w') as f:
+            for item in netrcFile:
+                f.write("%s\n" % item)
+            
+        shutil.copy('.netrc', os.path.expanduser("~"))        
         
     
     def dl_nldas(self, path_nldas: str):
@@ -56,12 +70,41 @@ class DataPreprocess:
                           --content-disposition -i {file_path}')
         
         
+    def dl_chirps(self, path_chirps: str):
+        
+        url = ('https://data.chc.ucsb.edu/products/CHIRPS-2.0/'
+               'global_daily/netcdf/p05/by_month/chirps-v2.0.'
+               f'{self.date[:4]}.{self.date[4:6]}.days_p05.nc')
+        
+        url = 'https://data.chc.ucsb.edu/products/CHIRPS-2.0/prelim/global_daily/netcdf/p05/chirps-v2.0.2023.days_p05.nc'
+        
+        saveName = url.split('/')[-1].strip()
+        
+        file_path = os.path.join(path_chirps, saveName)
+
+        
+        with requests.get(url.strip(), stream=True) as response:
+            if response.status_code != 200:
+                print("Verify that your username and password are correct")
+            else:
+                response.raw.decode_content = True
+                content = response.raw
+                with open(file_path, 'wb') as d:
+                    while True:
+                        chunk = content.read(1024 * 1024)
+                        if not chunk:
+                            break
+                        d.write(chunk)
+                print('Downloaded file: {}'.format(saveName))        
         
         
         
         
-dp = DataPreprocess('20240212', 'kgavahi', '491Newyork')
-dp.dl_nldas('NLDAS')
+        
+dp = DataPreprocess('20230901', 'kgavahi1', '491Newyork')
+dp.dl_chirps('chirps')
+
+da = xr.open_dataset('chirps/chirps-v2.0.2023.days_p05.nc')
         
         
         
