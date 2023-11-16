@@ -23,7 +23,7 @@ class DataPreprocess:
         self.password = password
         
     
-    def dl_nldas(self, path_nldas: str):
+    def dl_nldas(self, path: str):
         
         # determine the day of year
         fmt = '%Y%m%d'
@@ -43,7 +43,7 @@ class DataPreprocess:
         
         # let's save the urls in a text file so that we 
         # could download them with a single wget command
-        file_path = os.path.join(path_nldas, "urls.txt")
+        file_path = os.path.join(path, "urls.txt")
         if os.path.exists(file_path): os.remove(file_path)
         with open(file_path, 'w') as fp:
             fp.write('\n'.join(urls))        
@@ -52,12 +52,12 @@ class DataPreprocess:
         # download the files
         os.system(f'wget --load-cookies .urs_cookies --save-cookies \
                   .urs_cookies --keep-session-cookies --user={self.user}\
-                      --password={self.password} -P {path_nldas}\
+                      --password={self.password} -P {path}\
                           --content-disposition -i {file_path}')
         
         
-    def dl_chirps(self, path_chirps: str):
-        
+    def dl_chirps(self, path: str):
+        #TODO: which chirps product??
         url = ('https://data.chc.ucsb.edu/products/CHIRPS-2.0/'
                'global_daily/netcdf/p05/by_month/chirps-v2.0.'
                f'{self.date[:4]}.{self.date[4:6]}.days_p05.nc')
@@ -68,13 +68,10 @@ class DataPreprocess:
         
         # download the url
         print(f'downloading {fileName} ...')
-        os.system(f'wget --load-cookies .urs_cookies --save-cookies \
-                  .urs_cookies --keep-session-cookies --user={self.user}\
-                      --password={self.password} -P {path_chirps}\
-                          --content-disposition {url}')
+        os.system(f'wget -P {path} --content-disposition {url}')
         
         
-        
+    #def dl_cmorph(self, path: str):
         
         
         
@@ -85,7 +82,7 @@ class DataPreprocess:
         
         
         
-dp = DataPreprocess('20230901', 'kgavahi1', '491Newyork')
+dp = DataPreprocess('20230901', 'kgavahi', '491Newyork')
 dp.dl_chirps('chirps')
 
 #da = xr.open_dataset('chirps/chirps-v2.0.2023.days_p05.nc')
