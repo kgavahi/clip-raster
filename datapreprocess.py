@@ -62,7 +62,6 @@ class DataPreprocess:
                'global_daily/netcdf/p05/by_month/chirps-v2.0.'
                f'{self.date[:4]}.{self.date[4:6]}.days_p05.nc')
         
-        #url = 'https://data.chc.ucsb.edu/products/CHIRPS-2.0/prelim/global_daily/netcdf/p05/chirps-v2.0.2023.days_p05.nc'
         
         fileName = url.split('/')[-1].strip()
         
@@ -71,21 +70,29 @@ class DataPreprocess:
         os.system(f'wget -P {path} --content-disposition {url}')
         
         
-    #def dl_cmorph(self, path: str):
+    def dl_cmorph(self, path: str):
         
-        
+        url = (f'https://www.ncei.noaa.gov/data/cmorph-high'
+               f'-resolution-global-precipitation-estimates/'
+               f'access/daily/0.25deg/{self.date[:4]}/{self.date[4:6]}'
+               f'/CMORPH_V1.0_ADJ_0.25deg-DLY_00Z_{self.date}.nc')
         
 
+        fileName = url.split('/')[-1].strip()
+        
+        # download the url
+        print(f'downloading {fileName} ...')
+        os.system(f'wget -P {path} --content-disposition {url}')
       
         
         
         
         
         
-dp = DataPreprocess('20230901', 'kgavahi', '491Newyork')
-dp.dl_chirps('chirps')
+dp = DataPreprocess('20230401', 'kgavahi', '491Newyork')
+dp.dl_cmorph('chirps')
 
-#da = xr.open_dataset('chirps/chirps-v2.0.2023.days_p05.nc')
+da = xr.open_dataset('chirps/CMORPH_V1.0_ADJ_0.25deg-DLY_00Z_20230401.nc')
         
         
         
