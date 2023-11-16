@@ -22,21 +22,6 @@ class DataPreprocess:
         self.user = user
         self.password = password
         
-        # Create the .netrc file for authentication
-        pathNetrc = os.path.join(os.path.expanduser("~"),'.netrc')
-        if os.path.exists(pathNetrc):
-            os.remove(pathNetrc)
-            
-        netrcFile = ['machine urs.earthdata.nasa.gov',
-                      'login ' + self.user,
-                      'password '+self.password]
-        
-        with open('.netrc', 'w') as f:
-            for item in netrcFile:
-                f.write("%s\n" % item)
-            
-        shutil.copy('.netrc', os.path.expanduser("~"))        
-        
     
     def dl_nldas(self, path_nldas: str):
         
@@ -45,6 +30,7 @@ class DataPreprocess:
         dt = datetime.datetime.strptime(self.date, fmt)
         numday = dt.timetuple().tm_yday
         
+        # get the 24 urls, one for each hour
         urls = [(f'https://hydro1.gesdisc.eosdis.nasa.gov/'
                 f'daac-bin/OTF/HTTP_services.cgi?FILENAME=%2'
                 f'Fdata%2FNLDAS%2FNLDAS_FORA0125_H.002%2F'
@@ -76,26 +62,24 @@ class DataPreprocess:
                'global_daily/netcdf/p05/by_month/chirps-v2.0.'
                f'{self.date[:4]}.{self.date[4:6]}.days_p05.nc')
         
-        url = 'https://data.chc.ucsb.edu/products/CHIRPS-2.0/prelim/global_daily/netcdf/p05/chirps-v2.0.2023.days_p05.nc'
+        #url = 'https://data.chc.ucsb.edu/products/CHIRPS-2.0/prelim/global_daily/netcdf/p05/chirps-v2.0.2023.days_p05.nc'
         
-        saveName = url.split('/')[-1].strip()
+        fileName = url.split('/')[-1].strip()
         
-        file_path = os.path.join(path_chirps, saveName)
+        # download the url
+        print(f'downloading {fileName} ...')
+        os.system(f'wget --load-cookies .urs_cookies --save-cookies \
+                  .urs_cookies --keep-session-cookies --user={self.user}\
+                      --password={self.password} -P {path_chirps}\
+                          --content-disposition {url}')
+        
+        
+        
+        
+        
+        
 
-        
-        with requests.get(url.strip(), stream=True) as response:
-            if response.status_code != 200:
-                print("Verify that your username and password are correct")
-            else:
-                response.raw.decode_content = True
-                content = response.raw
-                with open(file_path, 'wb') as d:
-                    while True:
-                        chunk = content.read(1024 * 1024)
-                        if not chunk:
-                            break
-                        d.write(chunk)
-                print('Downloaded file: {}'.format(saveName))        
+      
         
         
         
@@ -104,7 +88,7 @@ class DataPreprocess:
 dp = DataPreprocess('20230901', 'kgavahi1', '491Newyork')
 dp.dl_chirps('chirps')
 
-da = xr.open_dataset('chirps/chirps-v2.0.2023.days_p05.nc')
+#da = xr.open_dataset('chirps/chirps-v2.0.2023.days_p05.nc')
         
         
         
