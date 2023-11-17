@@ -101,14 +101,14 @@ import numpy as np
 
 
 
-# up= 785366.110912
-# down=767749.595638
-# right=-1094376.75696
-# left=-1119311.59835
-up= 1407298.913147
-down=-1503823.977287
-right=2258121.111016
-left=-2361365.578107
+up= 785366.110912
+down=767749.595638
+right=-1094376.75696
+left=-1119311.59835
+# up= 1407298.913147
+# down=-1503823.977287
+# right=2258121.111016
+# left=-2361365.578107
 
 daymet = daymet.isel(x=(daymet.x >= left) & (daymet.x <= right),
                           y=(daymet.y >= down) & (daymet.y <= up),
@@ -173,8 +173,8 @@ import time
 #@jit(nopython=True) # Set "nopython" mode for best performance, equivalent to @njit
 def coarsen(arg_dd, dmet, ch_p_f, ch_p):
     dmet_coarse = np.empty(ch_p_f)
-    for i in range(3000):
-        #print(i, ch_p_f)
+    for i in range(ch_p_f):
+        print(i, ch_p_f)
         dmet_coarse[i] = np.nanmean(dmet[np.where(arg_dd==i)])
     dmet_coarse = dmet_coarse.reshape(ch_p)  
     return dmet_coarse
