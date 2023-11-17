@@ -169,11 +169,12 @@ dmet_coarse = np.empty(ch_p)
 
 from numba import jit
 import time
-@jit(nopython=True) # Set "nopython" mode for best performance, equivalent to @njit
+
+#@jit(nopython=True) # Set "nopython" mode for best performance, equivalent to @njit
 def coarsen(arg_dd, dmet, ch_p_f, ch_p):
     dmet_coarse = np.empty(ch_p_f)
-    for i in range(1000):
-        print(i, ch_p_f)
+    for i in range(3000):
+        #print(i, ch_p_f)
         dmet_coarse[i] = np.nanmean(dmet[np.where(arg_dd==i)])
     dmet_coarse = dmet_coarse.reshape(ch_p)  
     return dmet_coarse
