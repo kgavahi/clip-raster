@@ -101,10 +101,14 @@ import numpy as np
 
 
 
-up= 785366.110912
-down=767749.595638
-right=-1094376.75696
-left=-1119311.59835
+# up= 785366.110912
+# down=767749.595638
+# right=-1094376.75696
+# left=-1119311.59835
+up= 1407298.913147
+down=-1503823.977287
+right=2258121.111016
+left=-2361365.578107
 
 daymet = daymet.isel(x=(daymet.x >= left) & (daymet.x <= right),
                           y=(daymet.y >= down) & (daymet.y <= up),
@@ -153,7 +157,7 @@ kdtree = KDTree(points_product)
 d, arg_dd = kdtree.query(points)
 
 
-# ch_p = np.array(chirps.precip[0]).flatten()
+ch_p = np.array(chirps.precip[0]).flatten()
 
 # weights = np.zeros(ch_p.shape)
 
@@ -161,10 +165,12 @@ unique, counts = np.unique(arg_dd, return_counts=True)
 
 dmet = np.array(daymet.swe[0]).flatten()
 
-dmet_coarse = np.empty(32)
-for i in range(32):
-    dmet_coarse[i] = np.mean(dmet[np.where(arg_dd==i)])
-
+dmet_coarse = np.empty(ch_p.shape)
+N = len(ch_p)
+for i in range(N):
+    print(i, N)
+    dmet_coarse[i] = np.nanmean(dmet[np.where(arg_dd==i)])
+dmet_coarse = dmet_coarse.reshape(chirps.precip[0].shape)
 # weights = weights.flatten()
 # print(weights.shape)
 
@@ -180,7 +186,7 @@ m = Basemap(projection='cyl', resolution='l',
 
 
 pcolormesh = m.pcolormesh(chirps.longitude, chirps.latitude,
-                          dmet_coarse.reshape(4, 8), 
+                          dmet_coarse, 
                           latlon=True, cmap='jet')
 
 
