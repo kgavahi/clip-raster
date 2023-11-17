@@ -99,26 +99,31 @@ daymet = xr.open_dataset('daymet_v4_daily_na_swe_2011.nc')
 import numpy as np
 
 
-up= 49.384366
-down=24.523100
-right=-66.949894
-left=-124.763083
 
-chirps = chirps.isel(longitude=(chirps.longitude >= left) & (chirps.longitude <= right),
-                          latitude=(chirps.latitude >= down) & (chirps.latitude <= up),
-                          )
 
-up= 1407298.913147
-down=-1503823.977287
-right=2258121.111016
-left=-2361365.578107
+up= 785366.110912
+down=767749.595638
+right=-1094376.75696
+left=-1119311.59835
 
 daymet = daymet.isel(x=(daymet.x >= left) & (daymet.x <= right),
                           y=(daymet.y >= down) & (daymet.y <= up),
                           )
 
+# daymet = daymet.coarsen(x=5, boundary='pad').mean()\
+#         .coarsen(y=5, boundary='pad').mean()
+
 lat_daymet = np.array(daymet.lat)
 lon_daymet = np.array(daymet.lon)
+
+up= lat_daymet.max()
+down=lat_daymet.min()
+right=lon_daymet.max()
+left=lon_daymet.min()
+
+chirps = chirps.isel(longitude=(chirps.longitude >= left) & (chirps.longitude <= right),
+                          latitude=(chirps.latitude >= down) & (chirps.latitude <= up),
+                          )
 
 def FTranspose(lon, lat):
    
@@ -152,7 +157,13 @@ d, arg_dd = kdtree.query(points)
 
 # weights = np.zeros(ch_p.shape)
 
-# unique, counts = np.unique(arg_dd, return_counts=True)
+unique, counts = np.unique(arg_dd, return_counts=True)
+
+dmet = np.array(daymet.swe[0]).flatten()
+
+dmet_coarse = np.empty(32)
+for i in range(32):
+    dmet_coarse[i] = np.mean(dmet[np.where(arg_dd==i)])
 
 # weights = weights.flatten()
 # print(weights.shape)
@@ -164,19 +175,27 @@ d, arg_dd = kdtree.query(points)
 
 from mpl_toolkits.basemap import Basemap
 m = Basemap(projection='cyl', resolution='l',
-            llcrnrlat=45.172096, urcrnrlat =45.3,
-            llcrnrlon=-110.292881, urcrnrlon =-110) 
+            llcrnrlat=lat_daymet.min(), urcrnrlat =lat_daymet.max(),
+            llcrnrlon=lon_daymet.min(), urcrnrlon =lon_daymet.max()) 
+
+
+pcolormesh = m.pcolormesh(chirps.longitude, chirps.latitude,
+                          dmet_coarse.reshape(4, 8), 
+                          latlon=True, cmap='jet')
+
 
 # pcolormesh = m.pcolormesh(daymet.lon, daymet.lat, daymet.swe[0], 
-#                           latlon=True, cmap='jet', vmin=0, vmax=500) 
+#                           latlon=True, cmap='jet') 
 
+# np.random.seed(0)
 # pcolormesh = m.pcolormesh(chirps.longitude, chirps.latitude,
-#                           chirps.precip[0], 
-#                           latlon=True, cmap='jet', vmin=0, vmax=10) 
+#                           chirps.precip[0]+np.random.rand(4,8), 
+#                           latlon=True, cmap='jet') 
 
-pcolormesh = m.pcolormesh(daymet.lon, daymet.lat,
-                          arg_dd.reshape(2911, 4620), 
-                          latlon=True, cmap='jet')      
+# pcolormesh = m.pcolormesh(daymet.lon, daymet.lat,
+#                           arg_dd.reshape(18, 25), 
+#                           latlon=True, cmap='jet',
+#                           vmin=0, vmax=30)      
 
 
 import matplotlib.pyplot as plt
