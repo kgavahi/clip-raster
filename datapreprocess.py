@@ -157,20 +157,30 @@ kdtree = KDTree(points_product)
 d, arg_dd = kdtree.query(points)
 
 
-ch_p = np.array(chirps.precip[0]).flatten()
-
+ch_p_f = np.array(chirps.precip[0]).flatten().shape[0]
+ch_p = np.array(chirps.precip[0]).shape
 # weights = np.zeros(ch_p.shape)
 
-unique, counts = np.unique(arg_dd, return_counts=True)
+# unique, counts = np.unique(arg_dd, return_counts=True)
 
 dmet = np.array(daymet.swe[0]).flatten()
 
-dmet_coarse = np.empty(ch_p.shape)
-N = len(ch_p)
-for i in range(N):
-    print(i, N)
-    dmet_coarse[i] = np.nanmean(dmet[np.where(arg_dd==i)])
-dmet_coarse = dmet_coarse.reshape(chirps.precip[0].shape)
+dmet_coarse = np.empty(ch_p)
+
+from numba import jit
+import time
+@jit(nopython=True) # Set "nopython" mode for best performance, equivalent to @njit
+def coarsen(arg_dd, dmet, ch_p_f, ch_p):
+    dmet_coarse = np.empty(ch_p_f)
+    for i in range(1000):
+        print(i, ch_p_f)
+        dmet_coarse[i] = np.nanmean(dmet[np.where(arg_dd==i)])
+    dmet_coarse = dmet_coarse.reshape(ch_p)  
+    return dmet_coarse
+
+s=time.time()
+dmet_coarse = coarsen(arg_dd, dmet, ch_p_f, ch_p)
+print(time.time()-s)
 # weights = weights.flatten()
 # print(weights.shape)
 
