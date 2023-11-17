@@ -89,14 +89,104 @@ class DataPreprocess:
         
         
         
-dp = DataPreprocess('20230401', 'kgavahi', '491Newyork')
-dp.dl_cmorph('chirps')
+#dp = DataPreprocess('20230401', 'kgavahi', '491Newyork')
+#dp.dl_chirps('chirps')
 
-da = xr.open_dataset('chirps/CMORPH_V1.0_ADJ_0.25deg-DLY_00Z_20230401.nc')
+chirps = xr.open_dataset('chirps/chirps-v2.0.2023.04.days_p05.nc')
+
+daymet = xr.open_dataset('daymet_v4_daily_na_swe_2011.nc')
+
+import numpy as np
+
+
+up= 49.384366
+down=24.523100
+right=-66.949894
+left=-124.763083
+
+chirps = chirps.isel(longitude=(chirps.longitude >= left) & (chirps.longitude <= right),
+                          latitude=(chirps.latitude >= down) & (chirps.latitude <= up),
+                          )
+
+up= 1407298.913147
+down=-1503823.977287
+right=2258121.111016
+left=-2361365.578107
+
+daymet = daymet.isel(x=(daymet.x >= left) & (daymet.x <= right),
+                          y=(daymet.y >= down) & (daymet.y <= up),
+                          )
+
+lat_daymet = np.array(daymet.lat)
+lon_daymet = np.array(daymet.lon)
+
+def FTranspose(lon, lat):
+   
+    if lat.ndim == 1:
+
+        x, y = np.meshgrid(lon, lat)
+
+    if lat.ndim == 2:
+        x = lon
+        y = lat
         
-        
-        
-        
+    xf, yf = x.flatten(), y.flatten()
+
+    # TODO here can be more optimization
+    #points = np.vstack((xf,yf)).T
+    #points = np.transpose((xf, yf))
+    points = np.column_stack((xf,yf))    
+    
+    return points
+
+points = FTranspose(lon_daymet, lat_daymet)
+
+points_product = FTranspose(chirps.longitude, chirps.latitude)
+
+from scipy.spatial import KDTree
+kdtree = KDTree(points_product)
+d, arg_dd = kdtree.query(points)
+
+
+# ch_p = np.array(chirps.precip[0]).flatten()
+
+# weights = np.zeros(ch_p.shape)
+
+# unique, counts = np.unique(arg_dd, return_counts=True)
+
+# weights = weights.flatten()
+# print(weights.shape)
+
+# weights =+ np.array(daymet.swe[0]).flatten()[unique]
+
+# weights = weights.reshape(chirps.precip[0].shape)
+
+
+from mpl_toolkits.basemap import Basemap
+m = Basemap(projection='cyl', resolution='l',
+            llcrnrlat=45.172096, urcrnrlat =45.3,
+            llcrnrlon=-110.292881, urcrnrlon =-110) 
+
+# pcolormesh = m.pcolormesh(daymet.lon, daymet.lat, daymet.swe[0], 
+#                           latlon=True, cmap='jet', vmin=0, vmax=500) 
+
+# pcolormesh = m.pcolormesh(chirps.longitude, chirps.latitude,
+#                           chirps.precip[0], 
+#                           latlon=True, cmap='jet', vmin=0, vmax=10) 
+
+pcolormesh = m.pcolormesh(daymet.lon, daymet.lat,
+                          arg_dd.reshape(2911, 4620), 
+                          latlon=True, cmap='jet')      
+
+
+import matplotlib.pyplot as plt
+fig = plt.gcf()
+
+fig.colorbar(pcolormesh)        
+# m.drawparallels(np.arange(-90, 90, 50),
+#                 labels=[1, 0, 0, 0])
+# m.drawmeridians(np.arange(-180, 180, 50),
+#                 labels=[0, 0, 0, 1])
         
         
 
