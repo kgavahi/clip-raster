@@ -101,14 +101,14 @@ import numpy as np
 
 
 
-up= 785366.110912
-down=767749.595638
-right=-1094376.75696
-left=-1119311.59835
-# up= 1407298.913147
-# down=-1503823.977287
-# right=2258121.111016
-# left=-2361365.578107
+# up= 785366.110912
+# down=767749.595638
+# right=-1094376.75696
+# left=-1119311.59835
+up= 1407298.913147
+down=-1503823.977287
+right=2258121.111016
+left=-2361365.578107
 
 daymet = daymet.isel(x=(daymet.x >= left) & (daymet.x <= right),
                           y=(daymet.y >= down) & (daymet.y <= up),
@@ -157,37 +157,36 @@ kdtree = KDTree(points_product)
 d, arg_dd = kdtree.query(points)
 
 
-ch_p_f = np.array(chirps.precip[0]).flatten().shape[0]
-ch_p = np.array(chirps.precip[0]).shape
-# weights = np.zeros(ch_p.shape)
+daymet_f = np.array(daymet.swe[0]).flatten()
+chirps_f = np.array(chirps.precip[0]).flatten()
 
-# unique, counts = np.unique(arg_dd, return_counts=True)
+# daymet_coarse = np.empty(len(chirps_f))
 
-dmet = np.array(daymet.swe[0]).flatten()
+# for i in range(len(chirps_f)):
+#     print(i, len(chirps_f))
+#     daymet_coarse[i] = np.nanmean(daymet_f[np.where(arg_dd==i)])
+# daymet_coarse = daymet_coarse.reshape(chirps.precip[0].shape)
 
-dmet_coarse = np.empty(ch_p)
 
-from numba import jit
+##########
+
+import pandas as pd
 import time
 
-#@jit(nopython=True) # Set "nopython" mode for best performance, equivalent to @njit
-def coarsen(arg_dd, dmet, ch_p_f, ch_p):
-    dmet_coarse = np.empty(ch_p_f)
-    for i in range(ch_p_f):
-        print(i, ch_p_f)
-        dmet_coarse[i] = np.nanmean(dmet[np.where(arg_dd==i)])
-    dmet_coarse = dmet_coarse.reshape(ch_p)  
-    return dmet_coarse
+s = time.time()
+df1 = np.column_stack((arg_dd, daymet_f))
+df2 = pd.DataFrame(df1, columns=['group', 'daymet'])
+df3 = df2.groupby('group').mean().reindex(np.arange(len(chirps_f)))
+daymet_coarse = np.array(df3).flatten().reshape(chirps.precip[0].shape)
+print(time.time() - s)
+##############
 
-s=time.time()
-dmet_coarse = coarsen(arg_dd, dmet, ch_p_f, ch_p)
-print(time.time()-s)
-# weights = weights.flatten()
-# print(weights.shape)
 
-# weights =+ np.array(daymet.swe[0]).flatten()[unique]
 
-# weights = weights.reshape(chirps.precip[0].shape)
+
+
+
+
 
 
 from mpl_toolkits.basemap import Basemap
@@ -197,7 +196,7 @@ m = Basemap(projection='cyl', resolution='l',
 
 
 pcolormesh = m.pcolormesh(chirps.longitude, chirps.latitude,
-                          dmet_coarse, 
+                          chirps.precip[0], 
                           latlon=True, cmap='jet')
 
 

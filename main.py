@@ -119,7 +119,7 @@ def mod_lat_lon(mod):
 np.random.seed(10)
 time_axis = 2
 
-shp_path = 'shpfiles/ACF_basin.shp'
+shp_path = 'shpfiles/small_basin.shp'
 shp = shapefile.Reader(shp_path)
 
 # Get the polygon vertices of the basin
@@ -222,24 +222,25 @@ right = np.max(tupVerts_np[:, 0])
 # dl_dataset(url)
 
 
-ds_nldas = xr.open_mfdataset('NLDAS/*.nc4', concat_dim='time', combine='nested')
-grbs = pygrib.open('NLDAS_FORA0125_H.A20230101.0000.002.grb')
+ds_nldas = xr.open_mfdataset('NLDAS*.nc4', concat_dim='time', combine='nested')
 
 
+m = Basemap(projection='cyl', resolution='l',
+            llcrnrlat=down-.1, urcrnrlat =up+.1,
+            llcrnrlon=left-.1, urcrnrlon =right+.1)   
 
-grbs.seek(0)
-for grb in grbs:
-    print(grb)
-    print(grb.data()[0])
-    
-    aa
+shp_info = m.readshapefile(shp_path[:-4],'for_amsr',drawbounds=True,
+							   linewidth=1,color='r')    
 
-selected_grb = grbs.select(11)[0]
+pcolormesh = m.pcolormesh(ds_nldas.lon, ds_nldas.lat, np.random.rand(224, 464)*10, 
+                          latlon=True)
 
-# data, lat, lon = selected_grb.data()
+lon, lat = np.meshgrid(ds_nldas.lon, ds_nldas.lat)
+m.scatter(lon, lat, s=2, color='k')
 
+fig = plt.gcf()
 
-
+fig.colorbar(pcolormesh)
 
 aa
 os.system("wget --load-cookies C:\.urs_cookies --save-cookies C:\.urs_cookies --auth-no-challenge=on -P 22 --keep-session-cookies --content-disposition -i links.txt")
