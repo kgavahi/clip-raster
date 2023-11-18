@@ -224,6 +224,21 @@ right = np.max(tupVerts_np[:, 0])
 
 ds_nldas = xr.open_mfdataset('NLDAS*.nc4', concat_dim='time', combine='nested')
 
+data = np.random.rand(224, 464)*10
+lat = np.array(ds_nldas.lat)
+lon = np.array(ds_nldas.lon)
+
+sf=10
+# Create new coordinates for the downscaled grid
+new_lon = np.arange(left, right, .125/sf)
+new_lat = np.arange(down, up, .125/sf)
+
+
+
+r_nldas = ClipRaster(data, lat, lon, .125)
+weights, landmask = r_nldas.mask_shp(shp_path, scale_factor=sf)
+
+
 
 m = Basemap(projection='cyl', resolution='l',
             llcrnrlat=down-.1, urcrnrlat =up+.1,
@@ -232,15 +247,23 @@ m = Basemap(projection='cyl', resolution='l',
 shp_info = m.readshapefile(shp_path[:-4],'for_amsr',drawbounds=True,
 							   linewidth=1,color='r')    
 
-pcolormesh = m.pcolormesh(ds_nldas.lon, ds_nldas.lat, np.random.rand(224, 464)*10, 
+pcolormesh = m.pcolormesh(ds_nldas.lon, ds_nldas.lat, weights, 
                           latlon=True)
 
 lon, lat = np.meshgrid(ds_nldas.lon, ds_nldas.lat)
 m.scatter(lon, lat, s=2, color='k')
 
+txt = [f'{x:.2f}' for x in weights.flatten()]
+
+for c, w in enumerate(weights.flatten()):
+    print(w,c)
+    if w>0:
+        plt.text(lon.flatten()[c], lat.flatten()[c], txt[c])
+
 fig = plt.gcf()
 
 fig.colorbar(pcolormesh)
+
 
 aa
 os.system("wget --load-cookies C:\.urs_cookies --save-cookies C:\.urs_cookies --auth-no-challenge=on -P 22 --keep-session-cookies --content-disposition -i links.txt")
