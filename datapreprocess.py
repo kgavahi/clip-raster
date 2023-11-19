@@ -177,12 +177,18 @@ s = time.time()
 df1 = np.column_stack((arg_dd, daymet_f))
 df2 = pd.DataFrame(df1, columns=['group', 'daymet'])
 df3 = df2.groupby('group').mean().reindex(np.arange(len(chirps_f)))
-daymet_coarse = np.array(df3).flatten().reshape(chirps.precip[0].shape)
+daymet_coarse = np.array(df3).reshape(chirps.precip[0].shape)
 print(time.time() - s)
 ##############
+from scipy.interpolate import griddata
 
-
-
+s = time.time()
+daymet_coarse = griddata(
+    values=daymet.swe[0].values.ravel(),
+    points=np.stack((daymet['lon'], daymet['lat']), axis=-1).reshape((-1, 2)),
+    xi=np.stack(np.meshgrid(chirps.longitude, chirps.latitude), axis=-1).reshape((-1, 2)),
+method='linear').reshape(chirps.precip[0].shape)
+print(time.time() - s)
 
 
 
@@ -196,7 +202,7 @@ m = Basemap(projection='cyl', resolution='l',
 
 
 pcolormesh = m.pcolormesh(chirps.longitude, chirps.latitude,
-                          chirps.precip[0], 
+                          daymet_coarse, 
                           latlon=True, cmap='jet')
 
 

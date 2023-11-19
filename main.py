@@ -21,8 +21,29 @@ import os
 import shutil
 import requests
 import pygrib
+from inpoly import inpoly2
+
+def mask_with_vert_points(tupVerts, lat, lon, mode='inpoly'):
 
 
+    # if mode == 'matplotlib':
+    #     # Create a mask for the shapefile
+    #     points = FTranspose(lon, lat)
+    #     p = Path(tupVerts)  # make a polygon
+    #     grid = p.contains_points(points)
+    #     # now you have a mask with points inside a polygon
+    #     mask = grid.reshape(x.shape[0], x.shape[1])
+
+    if mode == 'inpoly':
+
+        
+        points = FTranspose(lon, lat)
+
+        # use inpoly which lightning fast
+        isin, ison = inpoly2(points, tupVerts)
+        #mask = isin.reshape(x.shape[0], x.shape[1])
+
+    return isin
 def dl_dataset(url):
     #url = 'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGDF.07/2022/01/3B-DAY.MS.MRG.3IMERG.20220101-S000000-E235959.V07.nc4'
     saveName = url.split('/')[-1].strip()
@@ -228,10 +249,32 @@ data = np.random.rand(224, 464)*10
 lat = np.array(ds_nldas.lat)
 lon = np.array(ds_nldas.lon)
 
-sf=10
+sf=100
 # Create new coordinates for the downscaled grid
-new_lon = np.arange(left, right, .125/sf)
-new_lat = np.arange(down, up, .125/sf)
+new_lon = np.arange(left-.125, right+.125, .125/sf)
+new_lat = np.arange(down-.125, up+.125, .125/sf)
+
+mask_new = mask_with_vert_points(tupVerts, new_lat, new_lon)
+C = np.where(mask_new, 1, np.nan).reshape(len(new_lat), len(new_lon))
+
+from scipy.spatial import KDTree
+x, y = np.meshgrid(new_lon, new_lat)
+points = FTranspose(x, y)
+
+points_product = FTranspose(lon, lat)
+
+#arg_dd = pairwise_distances_argmin(points, points_product)
+
+kdtree = KDTree(points_product)
+d, arg_dd = kdtree.query(points)
+
+df1 = np.column_stack((arg_dd, mask_new))
+df2 = pd.DataFrame(df1, columns=['group', 'mask'])
+df3 = df2.groupby('group').sum().reindex(np.arange(len(data.flatten())))
+df4 = df2.groupby('group').count().reindex(np.arange(len(data.flatten())))
+df5 = np.array(df3/df4).flatten()
+
+
 
 
 
@@ -241,21 +284,30 @@ weights, landmask = r_nldas.mask_shp(shp_path, scale_factor=sf)
 
 
 m = Basemap(projection='cyl', resolution='l',
-            llcrnrlat=down-.1, urcrnrlat =up+.1,
-            llcrnrlon=left-.1, urcrnrlon =right+.1)   
+            llcrnrlat=down-.2, urcrnrlat =up+.2,
+            llcrnrlon=left-.2, urcrnrlon =right+.2)   
 
 shp_info = m.readshapefile(shp_path[:-4],'for_amsr',drawbounds=True,
 							   linewidth=1,color='r')    
 
-pcolormesh = m.pcolormesh(ds_nldas.lon, ds_nldas.lat, weights, 
+pcolormesh = m.pcolormesh(ds_nldas.lon, ds_nldas.lat, data, 
                           latlon=True)
 
 lon, lat = np.meshgrid(ds_nldas.lon, ds_nldas.lat)
-m.scatter(lon, lat, s=2, color='k')
+m.scatter(lon, lat, s=3, color='k')
 
-txt = [f'{x:.2f}' for x in weights.flatten()]
+lon_n, lat_n = np.meshgrid(new_lon, new_lat)
+m.scatter(lon_n, lat_n, s=0, color='k')
 
-for c, w in enumerate(weights.flatten()):
+lon_n, lat_n = np.meshgrid(new_lon, new_lat)
+m.scatter(lon_n, lat_n, s=0, c=C)
+
+
+#txt = [f'{x:.2f}' for x in weights.flatten()]
+txt = [f'{x:.2f}' for x in df5]
+
+#for c, w in enumerate(weights.flatten()):
+for c, w in enumerate(df5):
     print(w,c)
     if w>0:
         plt.text(lon.flatten()[c], lat.flatten()[c], txt[c])
