@@ -16,60 +16,88 @@ class DataPreprocess:
     
     
     
-    def __init__(self, date: str, user: str, password: str):
+    def __init__(self, user=None, password=None):
         
         
-        # date format should be %Y%m%d (20230101)
-        self.date = date
         self.user = user
         self.password = password
         
     
-    def dl_nldas(self, path: str):
+    def dl_nldas(self, path=None, start_date=None, end_date=None):
         
-        # determine the day of year
-        fmt = '%Y%m%d'
-        dt = datetime.datetime.strptime(self.date, fmt)
-        numday = dt.timetuple().tm_yday
+        if end_date==None:
+            date_range = pd.date_range(start=start_date, 
+                                       end=start_date, 
+                                       freq='D')
+        else:
+            date_range = pd.date_range(start=start_date, 
+                                       end=end_date, 
+                                       freq='D')
         
-        # get the 24 urls, one for each hour
-        urls = [(f'https://hydro1.gesdisc.eosdis.nasa.gov/'
-                f'daac-bin/OTF/HTTP_services.cgi?FILENAME=%2'
-                f'Fdata%2FNLDAS%2FNLDAS_FORA0125_H.002%2F'
-                f'{self.date[:4]}%2F{numday:03d}%2FNLDAS_FORA0125_'
-                f'H.A{self.date}.{h:02d}00.002.grb&FORMAT=bmM0Lw'
-                f'&BBOX=25%2C-125%2C53%2C-67&LABEL=NLDAS_FORA0125'
-                f'_H.A{self.date}.{h:02d}00.002.grb.SUB.nc4&SHORTNAME'
-                f'=NLDAS_FORA0125_H&SERVICE=L34RS_LDAS&VERSION=1'
-                f'.02&DATASET_VERSION=002') for h in range(24)]
+        # let's save the urls in a text file to 
+        # download them with a single wget command
+        txt_path = os.path.join(path, "urls.txt")
+        if os.path.exists(txt_path): os.remove(txt_path)
         
-        # let's save the urls in a text file so that we 
-        # could download them with a single wget command
-        file_path = os.path.join(path, "urls.txt")
-        if os.path.exists(file_path): os.remove(file_path)
-        with open(file_path, 'w') as fp:
-            fp.write('\n'.join(urls))        
+        for date in date_range:
+            numday = date.timetuple().tm_yday
+            date_str = str(date)[:10].replace('-', '') 
+       
         
+            # get the 24 urls, one for each hour
+            urls = [(f'https://hydro1.gesdisc.eosdis.nasa.gov/'
+                    f'daac-bin/OTF/HTTP_services.cgi?FILENAME=%2'
+                    f'Fdata%2FNLDAS%2FNLDAS_FORA0125_H.002%2F'
+                    f'{date_str[:4]}%2F{numday:03d}%2FNLDAS_FORA0125_'
+                    f'H.A{date_str}.{h:02d}00.002.grb&FORMAT=bmM0Lw'
+                    f'&BBOX=25%2C-125%2C53%2C-67&LABEL=NLDAS_FORA0125'
+                    f'_H.A{date_str}.{h:02d}00.002.grb.SUB.nc4&SHORTNAME'
+                    f'=NLDAS_FORA0125_H&SERVICE=L34RS_LDAS&VERSION=1'
+                    f'.02&DATASET_VERSION=002') for h in range(24)]
+        
+
             
+            with open(txt_path, 'a') as fp:
+                fp.write('\n'.join(urls))        
+        
+        
         # download the files
         os.system(f'wget --load-cookies .urs_cookies --save-cookies \
                   .urs_cookies --keep-session-cookies --user={self.user}\
                       --password={self.password} -P {path}\
-                          --content-disposition -i {file_path}')
+                          --content-disposition -i {txt_path}')
         
         
-    def dl_chirps(self, path: str):
+    def dl_chirps(self, path=None, start_date=None, end_date=None):
+        
+        if end_date==None:
+            date_range = pd.date_range(start=start_date, 
+                                       end=start_date, 
+                                       freq='D')
+        else:
+            date_range = pd.date_range(start=start_date, 
+                                       end=end_date, 
+                                       freq='D')        
+        
+        date_str = [str(date)[:10].replace('-', '') for date in date_range]
+
+        
         #TODO: which chirps product??
-        url = ('https://data.chc.ucsb.edu/products/CHIRPS-2.0/'
+        urls = [('https://data.chc.ucsb.edu/products/CHIRPS-2.0/'
                'global_daily/netcdf/p05/by_month/chirps-v2.0.'
-               f'{self.date[:4]}.{self.date[4:6]}.days_p05.nc')
+               f'{date[:4]}.{date[4:6]}.days_p05.nc') for date in date_str]
+               
+        # let's save the urls in a text file to 
+        # download them with a single wget command
+        txt_path = os.path.join(path, "urls.txt")
+        if os.path.exists(txt_path): os.remove(txt_path)
+        
+        with open(txt_path, 'a') as fp:
+            fp.write('\n'.join(set(urls)))        
         
         
-        fileName = url.split('/')[-1].strip()
-        
-        # download the url
-        print(f'downloading {fileName} ...')
-        os.system(f'wget -P {path} --content-disposition {url}')
+        # download the urls
+        os.system(f'wget -P {path} --content-disposition -i {txt_path}')
         
         
     def dl_cmorph(self, path: str):
@@ -91,9 +119,12 @@ class DataPreprocess:
         
         
         
-#dp = DataPreprocess('20230401', 'kgavahi', '491Newyork')
-#dp.dl_chirps('chirps')
+dp = DataPreprocess(user='kgavahi', password='491Newyork')
+dp.dl_chirps(path='chirps', start_date='20100101', end_date='20100202')
 
+
+
+aa
 chirps = xr.open_dataset('chirps/chirps-v2.0.2023.04.days_p05.nc')
 
 daymet = xr.open_dataset('daymet_v4_daily_na_tmax_2011.nc')
