@@ -132,15 +132,53 @@ class DataPreprocess:
         # download the urls
         os.system(f'wget -P {path} --content-disposition -i {txt_path}')
       
-        
-        
-        
-        
-        
-dp = DataPreprocess(user='kgavahi', password='491Newyork')
-dp.dl_cmorph(path='chirps', start_date='20100101')
 
+    def dl_imerg(self, path=None, start_date=None, end_date=None, product=None, version='07'):
 
+        if end_date==None:
+            date_range = pd.date_range(start=start_date, 
+                                       end=start_date, 
+                                       freq='D')
+        else:
+            date_range = pd.date_range(start=start_date, 
+                                       end=end_date, 
+                                       freq='D')        
+        
+        date_str = [str(date)[:10].replace('-', '') for date in date_range]        
+        
+
+        urls = [(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
+                 f'{product}.{version}/{date[:4]}/{date[4:6]}/3B-DAY.MS.MRG.3IMERG'
+                 f'.{date}-S000000-E235959.V{version}.nc4') 
+               for date in date_str]        
+
+        # let's save the urls in a text file to 
+        # download them with a single wget command
+        txt_path = os.path.join(path, "urls.txt")
+        if os.path.exists(txt_path): os.remove(txt_path)
+        
+        with open(txt_path, 'a') as fp:
+            fp.write('\n'.join(set(urls))) 
+            
+        # download the files
+        os.system(f'wget --load-cookies .urs_cookies --save-cookies \
+                  .urs_cookies --keep-session-cookies --user={self.user}\
+                      --password={self.password} -P {path}\
+                          --content-disposition -i {txt_path}')            
+            
+            
+        
+# dp = DataPreprocess(user='kgavahi', password='491Newyork')
+# dp.dl_imerg(path='chirps', start_date='20100101', end_date='20100102',
+#             product='GPM_3IMERGDE', version='06')
+import urllib.request
+url = 'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGDE.06/2010/01/'
+uf = urllib.request.urlopen(url)
+html = uf.read()
+from bs4 import BeautifulSoup
+soup = BeautifulSoup(html, "lxml")
+for link in soup.find_all('a'):
+    print(link.get('href'))
 
 aa
 chirps = xr.open_dataset('chirps/chirps-v2.0.2023.04.days_p05.nc')
