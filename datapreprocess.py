@@ -134,8 +134,35 @@ class DataPreprocess:
         os.system(f'wget -P {path} --content-disposition -i {txt_path}')
       
 
-    def dl_imerg(self, path=None, start_date=None, end_date=None, product=None, version='07'):
+    def dl_imerg(self, path=None, start_date=None, end_date=None, 
+                 product=None, version='07'):
+        """
+        This method downloads the IMERG dataset.
+            
 
+        Parameters
+        ----------
+        path : TYPE, optional
+            DESCRIPTION. The default is None.
+        start_date : TYPE, optional
+            DESCRIPTION. The default is None.
+        end_date : TYPE, optional
+            DESCRIPTION. The default is None.
+        product : str, optional
+            The list of product can be found in the in the link below.
+            https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/
+            
+            for example IMERG final prodcut=GPM_3IMERGDF
+            
+            . The default is None.
+        version : TYPE, optional
+            DESCRIPTION. The default is '07'.
+
+        Returns
+        -------
+        None.
+
+        """
         if end_date==None:
             date_range = pd.date_range(start=start_date, 
                                        end=start_date, 
@@ -148,32 +175,26 @@ class DataPreprocess:
         date_str = [str(date)[:10].replace('-', '') for date in date_range]      
         
         
-        s=time.time()
+
         page_urls = set([(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
                     f'{product}.{version}/{date[:4]}/{date[4:6]}/')
                     for date in date_str])
         urls = []
         for page_url in page_urls:
             
-            uf = urllib.request.urlopen(page_url)
+            uf = urllib.request.urlopen(page_url, timeout=20)
             html = uf.read()
             soup = BeautifulSoup(html, "lxml")
             link_list = set([link.get('href') for link in soup.find_all('a') 
                          if link.get('href').endswith('nc4')])
             
-            filtered_links = [link for link in link_list if any(date in link for date in date_str)]
+            filtered_links = [link for link in link_list if 
+                              any(date in link for date in date_str)]
             
             for link in filtered_links:
                 urls.append(page_url+link)
         
-        print(urls)
-        print(time.time()-s)
-        a
-
-        urls = [(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
-                 f'{product}.{version}/{date[:4]}/{date[4:6]}/3B-DAY.MS.MRG.3IMERG'
-                 f'.{date}-S000000-E235959.V{version}.nc4') 
-               for date in date_str]        
+       
 
         # let's save the urls in a text file to 
         # download them with a single wget command
@@ -192,8 +213,8 @@ class DataPreprocess:
             
         
 dp = DataPreprocess(user='kgavahi', password='491Newyork')
-dp.dl_imerg(path='chirps', start_date='20010101', end_date='20030101',
-            product='GPM_3IMERGDE', version='06')
+dp.dl_imerg(path='chirps', start_date='20010125', end_date='20010205',
+            product='GPM_3IMERGDL', version='06')
 # import urllib.request
 # url = 'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGDE.06/2010/01/'
 # uf = urllib.request.urlopen(url)
