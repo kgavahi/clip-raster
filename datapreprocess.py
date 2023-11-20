@@ -3,7 +3,9 @@ import datetime
 import requests
 import shutil
 import xarray as xr
-
+import pandas as pd
+import time
+from scipy.spatial import KDTree
 
 
 class DataPreprocess:
@@ -94,7 +96,7 @@ class DataPreprocess:
 
 chirps = xr.open_dataset('chirps/chirps-v2.0.2023.04.days_p05.nc')
 
-daymet = xr.open_dataset('daymet_v4_daily_na_swe_2011.nc')
+daymet = xr.open_dataset('daymet_v4_daily_na_tmax_2011.nc')
 
 import numpy as np
 
@@ -105,10 +107,16 @@ import numpy as np
 # down=767749.595638
 # right=-1094376.75696
 # left=-1119311.59835
+
 up= 1407298.913147
 down=-1503823.977287
 right=2258121.111016
 left=-2361365.578107
+
+# up= 805366.110912
+# down=707749.595638
+# right=-914376.75696
+# left=-1019311.59835
 
 daymet = daymet.isel(x=(daymet.x >= left) & (daymet.x <= right),
                           y=(daymet.y >= down) & (daymet.y <= up),
@@ -147,17 +155,17 @@ def FTranspose(lon, lat):
     points = np.column_stack((xf,yf))    
     
     return points
-
+s = time.time()
 points = FTranspose(lon_daymet, lat_daymet)
 
 points_product = FTranspose(chirps.longitude, chirps.latitude)
 
-from scipy.spatial import KDTree
+
 kdtree = KDTree(points_product)
 d, arg_dd = kdtree.query(points)
 
 
-daymet_f = np.array(daymet.swe[0]).flatten()
+daymet_f = np.array(daymet.tmax[0]).flatten()
 chirps_f = np.array(chirps.precip[0]).flatten()
 
 # daymet_coarse = np.empty(len(chirps_f))
@@ -170,10 +178,9 @@ chirps_f = np.array(chirps.precip[0]).flatten()
 
 ##########
 
-import pandas as pd
-import time
 
-s = time.time()
+
+
 df1 = np.column_stack((arg_dd, daymet_f))
 df2 = pd.DataFrame(df1, columns=['group', 'daymet'])
 df3 = df2.groupby('group').mean().reindex(np.arange(len(chirps_f)))
@@ -182,12 +189,15 @@ print(time.time() - s)
 ##############
 from scipy.interpolate import griddata
 
+vs = np.moveaxis(daymet.tmax[:20].values, 0, -1).reshape(4620*2911, 20)
+
 s = time.time()
 daymet_coarse = griddata(
-    values=daymet.swe[0].values.ravel(),
+    #values=daymet.tmax[0].values.ravel(),
+    values=vs,
     points=np.stack((daymet['lon'], daymet['lat']), axis=-1).reshape((-1, 2)),
     xi=np.stack(np.meshgrid(chirps.longitude, chirps.latitude), axis=-1).reshape((-1, 2)),
-method='linear').reshape(chirps.precip[0].shape)
+method='linear').reshape(493, 1412, 20)
 print(time.time() - s)
 
 
@@ -202,11 +212,11 @@ m = Basemap(projection='cyl', resolution='l',
 
 
 pcolormesh = m.pcolormesh(chirps.longitude, chirps.latitude,
-                          daymet_coarse, 
+                          daymet_coarse[:, :, 0], 
                           latlon=True, cmap='jet')
 
 
-# pcolormesh = m.pcolormesh(daymet.lon, daymet.lat, daymet.swe[0], 
+# pcolormesh = m.pcolormesh(daymet.lon, daymet.lat, daymet.tmax[0], 
 #                           latlon=True, cmap='jet') 
 
 # np.random.seed(0)
