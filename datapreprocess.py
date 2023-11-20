@@ -85,7 +85,8 @@ class DataPreprocess:
         #TODO: which chirps product??
         urls = [('https://data.chc.ucsb.edu/products/CHIRPS-2.0/'
                'global_daily/netcdf/p05/by_month/chirps-v2.0.'
-               f'{date[:4]}.{date[4:6]}.days_p05.nc') for date in date_str]
+               f'{date[:4]}.{date[4:6]}.days_p05.nc')
+                for date in date_str]
                
         # let's save the urls in a text file to 
         # download them with a single wget command
@@ -100,19 +101,36 @@ class DataPreprocess:
         os.system(f'wget -P {path} --content-disposition -i {txt_path}')
         
         
-    def dl_cmorph(self, path: str):
-        
-        url = (f'https://www.ncei.noaa.gov/data/cmorph-high'
-               f'-resolution-global-precipitation-estimates/'
-               f'access/daily/0.25deg/{self.date[:4]}/{self.date[4:6]}'
-               f'/CMORPH_V1.0_ADJ_0.25deg-DLY_00Z_{self.date}.nc')
-        
+    def dl_cmorph(self, path=None, start_date=None, end_date=None):
 
-        fileName = url.split('/')[-1].strip()
+        if end_date==None:
+            date_range = pd.date_range(start=start_date, 
+                                       end=start_date, 
+                                       freq='D')
+        else:
+            date_range = pd.date_range(start=start_date, 
+                                       end=end_date, 
+                                       freq='D')        
         
-        # download the url
-        print(f'downloading {fileName} ...')
-        os.system(f'wget -P {path} --content-disposition {url}')
+        date_str = [str(date)[:10].replace('-', '') for date in date_range]
+
+        
+        urls = [(f'https://www.ncei.noaa.gov/data/cmorph-high'
+               f'-resolution-global-precipitation-estimates/'
+               f'access/daily/0.25deg/{date[:4]}/{date[4:6]}'
+               f'/CMORPH_V1.0_ADJ_0.25deg-DLY_00Z_{date}.nc') 
+               for date in date_str]
+        
+        # let's save the urls in a text file to 
+        # download them with a single wget command
+        txt_path = os.path.join(path, "urls.txt")
+        if os.path.exists(txt_path): os.remove(txt_path)
+        
+        with open(txt_path, 'a') as fp:
+            fp.write('\n'.join(set(urls))) 
+        
+        # download the urls
+        os.system(f'wget -P {path} --content-disposition -i {txt_path}')
       
         
         
@@ -120,7 +138,7 @@ class DataPreprocess:
         
         
 dp = DataPreprocess(user='kgavahi', password='491Newyork')
-dp.dl_chirps(path='chirps', start_date='20100101', end_date='20100202')
+dp.dl_cmorph(path='chirps', start_date='20100101')
 
 
 
