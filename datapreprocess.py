@@ -6,7 +6,8 @@ import xarray as xr
 import pandas as pd
 import time
 from scipy.spatial import KDTree
-
+import urllib.request
+from bs4 import BeautifulSoup
 
 class DataPreprocess:
     
@@ -144,8 +145,30 @@ class DataPreprocess:
                                        end=end_date, 
                                        freq='D')        
         
-        date_str = [str(date)[:10].replace('-', '') for date in date_range]        
+        date_str = [str(date)[:10].replace('-', '') for date in date_range]      
         
+        
+        s=time.time()
+        page_urls = set([(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
+                    f'{product}.{version}/{date[:4]}/{date[4:6]}/')
+                    for date in date_str])
+        urls = []
+        for page_url in page_urls:
+            
+            uf = urllib.request.urlopen(page_url)
+            html = uf.read()
+            soup = BeautifulSoup(html, "lxml")
+            link_list = set([link.get('href') for link in soup.find_all('a') 
+                         if link.get('href').endswith('nc4')])
+            
+            filtered_links = [link for link in link_list if any(date in link for date in date_str)]
+            
+            for link in filtered_links:
+                urls.append(page_url+link)
+        
+        print(urls)
+        print(time.time()-s)
+        a
 
         urls = [(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
                  f'{product}.{version}/{date[:4]}/{date[4:6]}/3B-DAY.MS.MRG.3IMERG'
@@ -168,17 +191,17 @@ class DataPreprocess:
             
             
         
-# dp = DataPreprocess(user='kgavahi', password='491Newyork')
-# dp.dl_imerg(path='chirps', start_date='20100101', end_date='20100102',
-#             product='GPM_3IMERGDE', version='06')
-import urllib.request
-url = 'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGDE.06/2010/01/'
-uf = urllib.request.urlopen(url)
-html = uf.read()
-from bs4 import BeautifulSoup
-soup = BeautifulSoup(html, "lxml")
-for link in soup.find_all('a'):
-    print(link.get('href'))
+dp = DataPreprocess(user='kgavahi', password='491Newyork')
+dp.dl_imerg(path='chirps', start_date='20010101', end_date='20030101',
+            product='GPM_3IMERGDE', version='06')
+# import urllib.request
+# url = 'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGDE.06/2010/01/'
+# uf = urllib.request.urlopen(url)
+# html = uf.read()
+# from bs4 import BeautifulSoup
+# soup = BeautifulSoup(html, "lxml")
+# for link in soup.find_all('a'):
+#     print(link.get('href'))
 
 aa
 chirps = xr.open_dataset('chirps/chirps-v2.0.2023.04.days_p05.nc')
