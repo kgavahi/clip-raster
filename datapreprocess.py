@@ -233,14 +233,8 @@ dp = DataPreprocess(user='kgavahi', password='491Newyork')
 dp.dl_gpmL3(path='chirps', product='GPM_3CMB.07', 
             start_date='20190125', end_date='20190205',
             )
-# import urllib.request
-# url = 'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGDE.06/2010/01/'
-# uf = urllib.request.urlopen(url)
-# html = uf.read()
-# from bs4 import BeautifulSoup
-# soup = BeautifulSoup(html, "lxml")
-# for link in soup.find_all('a'):
-#     print(link.get('href'))
+
+
 
 aa
 chirps = xr.open_dataset('chirps/chirps-v2.0.2023.04.days_p05.nc')
