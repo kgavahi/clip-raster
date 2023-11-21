@@ -134,8 +134,8 @@ class DataPreprocess:
         os.system(f'wget -P {path} --content-disposition -i {txt_path}')
       
 
-    def dl_imerg(self, path=None, start_date=None, end_date=None, 
-                 product=None):
+    def dl_imerg(self, path=None, product=None,
+                 start_date=None, end_date=None):
         """
         
 
@@ -164,7 +164,12 @@ class DataPreprocess:
                                        end=end_date, 
                                        freq='D')        
         
-        date_str = [str(date)[:10].replace('-', '') for date in date_range]      
+        date_str = [str(date)[:10].replace('-', '') for date in date_range]
+        numday = [date.timetuple().tm_yday for date in date_range]
+        
+        print(zip(date_str,numday))
+        
+        
         
         
 
@@ -172,7 +177,9 @@ class DataPreprocess:
                     f'{product}/{date[:4]}/{date[4:6]}/')
                     for date in date_str])
         
-
+        page_urls = set([(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
+                    f'{product}/{date[:4]}/{numday:03d}/')
+                    for date, numday in zip(date_str,numday)])
         
         
         
@@ -209,7 +216,7 @@ class DataPreprocess:
             
         
 dp = DataPreprocess(user='kgavahi', password='491Newyork')
-dp.dl_imerg(path='chirps', product='GPM_3GPROFMETOPAMHS_DAY_CLIM.07', 
+dp.dl_imerg(path='chirps', product='GPM_3IMERGHH.06', 
             start_date='20190125', end_date='20190205',
             )
 # import urllib.request
