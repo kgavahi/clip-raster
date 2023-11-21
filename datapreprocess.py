@@ -134,7 +134,7 @@ class DataPreprocess:
         os.system(f'wget -P {path} --content-disposition -i {txt_path}')
       
 
-    def dl_imerg(self, path=None, product=None,
+    def dl_gpmL3(self, path=None, product=None,
                  start_date=None, end_date=None):
         """
         
@@ -172,13 +172,31 @@ class DataPreprocess:
         
 
 
-        page_urls = set([(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
+        page_urls_d = set([(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
                     f'{product}/{date[:4]}/{date[4:6]}/')
                     for date in date_str])
         
         page_urls_h = set([(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
                     f'{product}/{date[:4]}/{numday:03d}/')
                     for date, numday in zip(date_str, numday)])
+
+        page_urls_m = set([(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
+                    f'{product}/{date[:4]}/')
+                    for date in date_str])
+        
+        try:
+            uf = urllib.request.urlopen(list(page_urls_d)[0])
+            page_urls = page_urls_d
+        except:
+            try:
+                uf = urllib.request.urlopen(list(page_urls_h)[0])
+                page_urls = page_urls_h  
+            except:
+                try:
+                    uf = urllib.request.urlopen(list(page_urls_m)[0])
+                    page_urls = page_urls_m  
+                except:
+                    pass
         
         
         
@@ -215,7 +233,7 @@ class DataPreprocess:
             
         
 dp = DataPreprocess(user='kgavahi', password='491Newyork')
-dp.dl_imerg(path='chirps', product='GPM_3IMERGHH.06', 
+dp.dl_gpmL3(path='chirps', product='GPM_3CMB.07', 
             start_date='20190125', end_date='20190205',
             )
 # import urllib.request
