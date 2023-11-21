@@ -167,19 +167,18 @@ class DataPreprocess:
         date_str = [str(date)[:10].replace('-', '') for date in date_range]
         numday = [date.timetuple().tm_yday for date in date_range]
         
-        print(zip(date_str,numday))
+
         
         
-        
-        
+
 
         page_urls = set([(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
                     f'{product}/{date[:4]}/{date[4:6]}/')
                     for date in date_str])
         
-        page_urls = set([(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
+        page_urls_h = set([(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
                     f'{product}/{date[:4]}/{numday:03d}/')
-                    for date, numday in zip(date_str,numday)])
+                    for date, numday in zip(date_str, numday)])
         
         
         
