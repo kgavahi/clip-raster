@@ -135,10 +135,9 @@ class DataPreprocess:
       
 
     def dl_imerg(self, path=None, start_date=None, end_date=None, 
-                 product=None, version='07'):
+                 product=None):
         """
-        This method downloads the IMERG dataset.
-            
+        
 
         Parameters
         ----------
@@ -148,15 +147,8 @@ class DataPreprocess:
             DESCRIPTION. The default is None.
         end_date : TYPE, optional
             DESCRIPTION. The default is None.
-        product : str, optional
-            The list of product can be found in the in the link below.
-            https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/
-            
-            for example IMERG final prodcut=GPM_3IMERGDF
-            
-            . The default is None.
-        version : TYPE, optional
-            DESCRIPTION. The default is '07'.
+        product : TYPE, optional
+            DESCRIPTION. The default is None.
 
         Returns
         -------
@@ -177,16 +169,20 @@ class DataPreprocess:
         
 
         page_urls = set([(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
-                    f'{product}.{version}/{date[:4]}/{date[4:6]}/')
+                    f'{product}/{date[:4]}/{date[4:6]}/')
                     for date in date_str])
+        
+
+        
+        
+        
         urls = []
         for page_url in page_urls:
             
             uf = urllib.request.urlopen(page_url, timeout=20)
             html = uf.read()
             soup = BeautifulSoup(html, "lxml")
-            link_list = set([link.get('href') for link in soup.find_all('a') 
-                         if link.get('href').endswith('nc4')])
+            link_list = set([link.get('href') for link in soup.find_all('a')])
             
             filtered_links = [link for link in link_list if 
                               any(date in link for date in date_str)]
@@ -213,8 +209,9 @@ class DataPreprocess:
             
         
 dp = DataPreprocess(user='kgavahi', password='491Newyork')
-dp.dl_imerg(path='chirps', start_date='20010125', end_date='20010205',
-            product='GPM_3IMERGDL', version='06')
+dp.dl_imerg(path='chirps', product='GPM_3GPROFMETOPAMHS_DAY_CLIM.07', 
+            start_date='20190125', end_date='20190205',
+            )
 # import urllib.request
 # url = 'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGDE.06/2010/01/'
 # uf = urllib.request.urlopen(url)
