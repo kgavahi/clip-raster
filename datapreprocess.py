@@ -193,7 +193,8 @@ class DataPreprocess:
                     uf = urllib.request.urlopen(list(page_urls_m)[0])
                     page_urls = page_urls_m  
                 except:
-                    pass
+                    print('DateError: Some dates are not available for this product')
+                    return
         
         
         
@@ -227,13 +228,97 @@ class DataPreprocess:
                       --password={self.password} -P {path}\
                           --content-disposition -i {txt_path}')            
             
-            
-        
-dp = DataPreprocess(user='kgavahi', password='491Newyork')
-dp.dl_gpmL3(path='chirps', product='GPM_3CMB.07', 
-            start_date='20190125', end_date='20190205',
-            )
 
+    def dl_modis(self, path=None, product=None,
+                 start_date=None, end_date=None, tiles=None):            
+        
+        if tiles=='conus':
+            # 14 tiles that cover the CONUS
+            tiles = ["h08v04","h08v05","h08v06",
+                            "h09v04","h09v05","h09v06",
+                             "h10v04","h10v05","h10v06",
+                             "h11v04","h11v05","h12v04",
+                             "h12v05","h13v04"]       
+        
+        satellite_mapping = {
+            'MCD': 'MOTA',
+            'MYD': 'MOLA',
+            'MOD': 'MOLT'
+        }
+        
+        satellite = satellite_mapping.get(product[:3], 'unknown')
+        
+        if end_date==None:
+            date_range = pd.date_range(start=start_date, 
+                                       end=start_date, 
+                                       freq='D')
+        else:
+            date_range = pd.date_range(start=start_date, 
+                                       end=end_date, 
+                                       freq='D')        
+        
+        date_str = [str(date)[:10].replace('-', '') for date in date_range]
+
+        page_url = f'https://e4ftl01.cr.usgs.gov/{satellite}/{product}/'
+        
+        uf = urllib.request.urlopen(page_url, timeout=20)
+        html = uf.read()
+        soup = BeautifulSoup(html, "lxml")
+        link_list = set([link.get('href') for link in soup.find_all('a')])
+
+        filtered_links = [link for link in link_list if 
+                          any(date in link.replace('.', '') for date in date_str)]
+
+        page_urls = [page_url+link for link in filtered_links]
+        
+
+        urls = []
+        for page_url in page_urls:
+            
+            uf = urllib.request.urlopen(page_url, timeout=20)
+            html = uf.read()
+            soup = BeautifulSoup(html, "lxml")
+            link_list = set([link.get('href') for link in soup.find_all('a')])
+            
+            filtered_links = [link for link in link_list if 
+                              any(tile in link for tile in tiles)]
+            
+            for link in filtered_links:
+                urls.append(page_url+link)
+        
+        
+        # let's save the urls in a text file to 
+        # download them with a single wget command
+        txt_path = os.path.join(path, "urls.txt")
+        if os.path.exists(txt_path): os.remove(txt_path)
+        
+        with open(txt_path, 'a') as fp:
+            fp.write('\n'.join(set(urls))) 
+            
+        # download the files
+        os.system(f'wget --load-cookies .urs_cookies --save-cookies \
+                  .urs_cookies --keep-session-cookies --user={self.user}\
+                      --password={self.password} -P {path}\
+                          --content-disposition -i {txt_path}')
+
+        aa        
+        
+
+dp = DataPreprocess(user='kgavahi', password='491Newyork')
+dp.dl_modis(path='chirps', product='MOD17A2HGF.061', 
+            start_date='20210101', end_date='20210117',
+            tiles='conus')
+        
+
+
+page_url = 'https://e4ftl01.cr.usgs.gov/MOTA/MCD43A1.061/'
+uf = urllib.request.urlopen(page_url, timeout=20)
+html = uf.read()
+soup = BeautifulSoup(html, "lxml")
+link_list = set([link.get('href') for link in soup.find_all('a')])
+
+filtered_links = [link for link in link_list if 
+                  datetime.strptime(link[:-1], '%Y.%m.%d')]
 
 
 aa
