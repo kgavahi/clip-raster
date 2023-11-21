@@ -169,9 +169,6 @@ class DataPreprocess:
         
 
         
-        
-
-
         page_urls_d = set([(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
                     f'{product}/{date[:4]}/{date[4:6]}/')
                     for date in date_str])
