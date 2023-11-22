@@ -305,7 +305,7 @@ class DataPreprocess:
         
 
 dp = DataPreprocess(user='kgavahi', password='491Newyork')
-dp.dl_modis(path='chirps', product='MOD17A2HGF.061', 
+dp.dl_modis(path='chirps', product='MYD14.061', 
             start_date='20210101', end_date='20210117',
             tiles='conus')
         
