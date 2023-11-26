@@ -59,7 +59,9 @@ class DataPreprocess:
 
             
             with open(txt_path, 'a') as fp:
-                fp.write('\n'.join(urls))        
+                fp.write('\n'.join(urls)) 
+
+                
         
         
         # download the files
