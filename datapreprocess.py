@@ -302,7 +302,7 @@ class DataPreprocess:
                           --content-disposition -i {txt_path}')
                           
 
-        aa        
+               
         
 
 dp = DataPreprocess(user='kgavahi', password='491Newyork')
@@ -311,7 +311,7 @@ dp.dl_modis(path='chirps', product='MYD14.061',
             tiles='conus')
         
 
-
+aa
 
 page_url = 'https://e4ftl01.cr.usgs.gov/MOTA/MCD43A1.061/'
 uf = urllib.request.urlopen(page_url, timeout=20)
