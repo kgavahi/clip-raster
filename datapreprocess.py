@@ -8,6 +8,7 @@ import time
 from scipy.spatial import KDTree
 import urllib.request
 from bs4 import BeautifulSoup
+import numpy as np
 
 class DataPreprocess:
     
@@ -307,11 +308,68 @@ class DataPreprocess:
                
         
 
-dp = DataPreprocess(user='kgavahi', password='491Newyork')
-dp.dl_modis(path='chirps', product='MYD14.061', 
-            start_date='20210101', end_date='20210117',
-            tiles='conus')
-        
+# dp = DataPreprocess(user='kgavahi', password='491Newyork')
+# dp.dl_modis(path='chirps', product='MYD14.061', 
+#             start_date='20210101', end_date='20210117',
+#             tiles='conus')
+    
+
+# dp = DataPreprocess(user='kgavahi', password='491Newyork')
+# dp.dl_gpmL3(path='chirps', product='GPM_3IMERGDF.07/', 
+#             start_date='20210101', end_date='20210117')
+
+
+da = xr.open_mfdataset('chirps/3B-DAY.MS.MRG.3IMERG.*-S000000-E235959.V07.nc4')
+da = da.precipitation
+
+# files = os.listdir('st')
+# files = sorted(files)
+# s = time.time()
+# for file in files:
+#     df = pd.read_csv(f'st/{file}')
+#     df['DATE'] = pd.to_datetime(df['DATE'])
+#     lat_st = df.LATITUDE[0]
+#     lon_st = df.LONGITUDE[0]
+    
+#     da_st = da.sel(lon=lon_st, lat=lat_st, method="nearest")
+    
+#     df_imerg = da_st.to_dataframe().reset_index().rename(columns={"time":"DATE"})
+    
+#     print(df_imerg)
+    
+#     df = df.merge(df_imerg, on='DATE', how='outer')
+    
+#     df.to_csv('test.csv')
+#  print(time.time()-s)   
+
+
+files = os.listdir('st')
+files = sorted(files)
+lat_st = []
+lon_st = []
+s = time.time()
+for file in files:
+    df = pd.read_csv(f'st/{file}')
+    df['DATE'] = pd.to_datetime(df['DATE'])
+    lat_st.append(df.LATITUDE[0])
+    lon_st.append(df.LONGITUDE[0])
+   
+
+    
+tgt_lat = xr.DataArray(lat_st, dims="points")
+tgt_lon = xr.DataArray(lon_st, dims="points")
+da = da.sel(lon=tgt_lon, lat=tgt_lat, method="nearest")
+df_imerg = da.to_dataframe()
+
+
+
+
+# tgt_x = xr.DataArray(np.linspace(0, 4, num=10), dims="points")
+# tgt_y = xr.DataArray(np.linspace(0, 4, num=10), dims="points")
+# da = da.sel(lon=tgt_x, lat=tgt_y, method="nearest")
+
+# print(da.precipitation.to_dataframe())
+    
 
 aa
 
