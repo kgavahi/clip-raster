@@ -322,6 +322,73 @@ class DataPreprocess:
 da = xr.open_mfdataset('chirps/3B-DAY.MS.MRG.3IMERG.*-S000000-E235959.V07.nc4')
 da = da.precipitation
 
+import glob
+import pandas as pd
+
+
+#########################
+s=time.time()
+selected_columns = ['STATION', 'DATE', 'LATITUDE', 'LONGITUDE', 'PRCP']
+# df = pd.concat((pd.read_csv(file, usecols=selected_columns) 
+#                 for file in glob.glob('st/*.csv')), 
+#                 ignore_index=True)
+print(time.time()-s)
+#############################
+
+s=time.time()
+dataframes = []
+
+for file in glob.glob('st/*.csv'):
+    try:
+        df = pd.read_csv(file, usecols=selected_columns)
+        dataframes.append(df)
+    except ValueError:
+        # Ignore files where 'PRCP' column does not exist
+        os.remove(file)
+        print(f"Ignoring file {file} as it does not contain the 'PRCP' column.")
+
+if dataframes:
+    df = pd.concat(dataframes, ignore_index=True)
+else:
+    print("No valid files found.")
+print(time.time()-s)
+############################
+
+
+
+aa
+
+
+
+df['DATE'] = pd.to_datetime(df['DATE'])
+
+
+
+lat_st = df.LATITUDE.unique()
+lon_st = df.LONGITUDE.unique()
+stations = df.STATION.unique()
+
+tgt_lat = xr.DataArray(lat_st, dims="STATION", coords=dict(STATION=stations))
+tgt_lon = xr.DataArray(lon_st, dims="STATION", coords=dict(STATION=stations))
+da = da.sel(lon=tgt_lon, lat=tgt_lat, method="nearest")
+df_imerg = da.to_dataframe()
+df_imerg = df_imerg.reset_index().rename(columns={"time":"DATE"})
+
+
+
+df2 = df.merge(df_imerg, on=['DATE', 'STATION'], how='outer')
+
+aa
+
+import dask.dataframe as dd
+df = dd.read_csv('st/*.csv', assume_missing=True)
+print(df.groupby('LATITUDE').PRCP.mean().compute())
+
+
+df.to_parquet('st/test.parquet', engine='pyarrow')
+
+aa
+
 # files = os.listdir('st')
 # files = sorted(files)
 # s = time.time()
@@ -362,6 +429,24 @@ da = da.sel(lon=tgt_lon, lat=tgt_lat, method="nearest")
 df_imerg = da.to_dataframe()
 
 
+
+
+s = time.time()
+for i, file in enumerate(files):
+    df = pd.read_csv(f'st/{file}')
+    df['DATE'] = pd.to_datetime(df['DATE'])
+    
+    #df_imerg_st = df_imerg.loc[df_imerg.index.get_level_values('points') == i]
+    #df_imerg_st = df_imerg_st.reset_index().rename(columns={"time":"DATE"})
+    
+    #df = df.merge(df_imerg_st, on='DATE', how='outer')
+    
+    #df.to_csv('test.csv')
+
+
+
+
+print(time.time()-s) 
 
 
 # tgt_x = xr.DataArray(np.linspace(0, 4, num=10), dims="points")
