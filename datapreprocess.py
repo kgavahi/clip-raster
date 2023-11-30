@@ -319,54 +319,40 @@ class DataPreprocess:
 #             start_date='20210101', end_date='20210117')
 
 
-da = xr.open_mfdataset('chirps/3B-DAY.MS.MRG.3IMERG.*-S000000-E235959.V07.nc4')
-da = da.precipitation
-
+da = xr.open_mfdataset('chirps/3B-DAY.MS.MRG.3IMERG.*.nc4')
+da = da.HQprecipitation
+datetimeindex = da.indexes['time'].to_datetimeindex()
+da['time'] = datetimeindex
 import glob
-import pandas as pd
 
 
 #########################
 s=time.time()
 selected_columns = ['STATION', 'DATE', 'LATITUDE', 'LONGITUDE', 'PRCP']
-# df = pd.concat((pd.read_csv(file, usecols=selected_columns) 
-#                 for file in glob.glob('st/*.csv')), 
-#                 ignore_index=True)
+df = pd.concat((pd.read_csv(file, usecols=selected_columns) 
+                for file in glob.glob('st/*.csv')), 
+                ignore_index=True)
 print(time.time()-s)
 #############################
 
-s=time.time()
-dataframes = []
-
-for file in glob.glob('st/*.csv'):
-    try:
-        df = pd.read_csv(file, usecols=selected_columns)
-        dataframes.append(df)
-    except ValueError:
-        # Ignore files where 'PRCP' column does not exist
-        os.remove(file)
-        print(f"Ignoring file {file} as it does not contain the 'PRCP' column.")
-
-if dataframes:
-    df = pd.concat(dataframes, ignore_index=True)
-else:
-    print("No valid files found.")
-print(time.time()-s)
-############################
-
-
-
-aa
 
 
 
 df['DATE'] = pd.to_datetime(df['DATE'])
+df = df[(df['DATE'] >= '2000-01-01') & (df['DATE'] <= '2002-01-01')]
 
 
 
-lat_st = df.LATITUDE.unique()
-lon_st = df.LONGITUDE.unique()
-stations = df.STATION.unique()
+df_dd = df.drop_duplicates(subset=['STATION'])
+
+
+
+lat_st = df_dd.LATITUDE
+lon_st = df_dd.LONGITUDE
+stations = df_dd.STATION
+
+
+
 
 tgt_lat = xr.DataArray(lat_st, dims="STATION", coords=dict(STATION=stations))
 tgt_lon = xr.DataArray(lon_st, dims="STATION", coords=dict(STATION=stations))
@@ -376,7 +362,11 @@ df_imerg = df_imerg.reset_index().rename(columns={"time":"DATE"})
 
 
 
+
+
 df2 = df.merge(df_imerg, on=['DATE', 'STATION'], how='outer')
+
+print(df2)
 
 aa
 
