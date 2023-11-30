@@ -172,31 +172,28 @@ class DataPreprocess:
         
 
         
-        page_urls_d = set([(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
-                    f'{product}/{date[:4]}/{date[4:6]}/')
-                    for date in date_str])
-        
-        page_urls_h = set([(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
-                    f'{product}/{date[:4]}/{numday:03d}/')
-                    for date, numday in zip(date_str, numday)])
-
-        page_urls_m = set([(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
-                    f'{product}/{date[:4]}/')
-                    for date in date_str])
-        
         try:
-            uf = urllib.request.urlopen(list(page_urls_d)[0])
-            page_urls = page_urls_d
+            page_urls = set([(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
+                    f'{product}/{date[:4]}/{date[4:6]}/')
+                    for date in date_str]) 
+            uf = [urllib.request.urlopen(p) for p in page_urls]
+
         except:
             try:
-                uf = urllib.request.urlopen(list(page_urls_h)[0])
-                page_urls = page_urls_h  
+                page_urls = set([(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
+                    f'{product}/{date[:4]}/{numday:03d}/')
+                    for date, numday in zip(date_str, numday)]) 
+                uf = [urllib.request.urlopen(p) for p in page_urls]
             except:
                 try:
-                    uf = urllib.request.urlopen(list(page_urls_m)[0])
-                    page_urls = page_urls_m  
+                    page_urls = set([(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
+                                f'{product}/{date[:4]}/')
+                                for date in date_str])  
+                    uf = [urllib.request.urlopen(p) for p in page_urls]
                 except:
                     print('DateError: Some dates are not available for this product')
+                    print('Check the following link for available dates:')
+                    print(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/{product}')
                     return
         
         
@@ -211,7 +208,7 @@ class DataPreprocess:
             
             filtered_links = [link for link in link_list if 
                               any(date in link for date in date_str)]
-            
+            print(filtered_links)
             for link in filtered_links:
                 urls.append(page_url+link)
         
@@ -316,13 +313,14 @@ class DataPreprocess:
 
 # dp = DataPreprocess(user='kgavahi', password='491Newyork')
 # dp.dl_gpmL3(path='chirps', product='GPM_3IMERGDF.07/', 
-#             start_date='20210101', end_date='20210117')
+#             start_date='20010101', end_date='20010105')
 
 
-da = xr.open_mfdataset('chirps/3B-DAY.MS.MRG.3IMERG.*.nc4')
-da = da.HQprecipitation
-datetimeindex = da.indexes['time'].to_datetimeindex()
-da['time'] = datetimeindex
+
+da = xr.open_mfdataset('chirps/3B-DAY.*.V07.nc4')
+da = da.precipitation
+#datetimeindex = da.indexes['time'].to_datetimeindex()
+#da['time'] = datetimeindex
 import glob
 
 
