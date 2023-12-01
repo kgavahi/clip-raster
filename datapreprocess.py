@@ -365,7 +365,7 @@ df_imerg = df_imerg.reset_index().rename(columns={"time":"DATE"})
 df2 = df.merge(df_imerg, on=['DATE', 'STATION'], how='outer')
 
 print(df2)
-
+ 
 aa
 
 import dask.dataframe as dd
