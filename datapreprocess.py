@@ -71,6 +71,38 @@ class DataPreprocess:
                       --password={self.password} -P {path}\
                           --content-disposition -i {txt_path}')
         
+    def dl_gldas(self, path=None, start_date=None, end_date=None):
+        
+        if end_date==None:
+            date_range = pd.date_range(start=start_date, 
+                                       end=start_date, 
+                                       freq='D')
+        else:
+            date_range = pd.date_range(start=start_date, 
+                                       end=end_date, 
+                                       freq='D')
+        
+        # let's save the urls in a text file to 
+        # download them with a single wget command
+        txt_path = os.path.join(path, "urls.txt")
+        if os.path.exists(txt_path): os.remove(txt_path)
+        
+        for date in date_range:
+            numday = date.timetuple().tm_yday
+            date_str = str(date)[:10].replace('-', '') 
+       
+        
+            # get the 24 urls, one for each hour
+            urls = [(f'https://hydro1.gesdisc.eosdis.nasa.gov/'
+                    f'daac-bin/OTF/HTTP_services.cgi?FILENAME=%2'
+                    f'Fdata%2FNLDAS%2FNLDAS_FORA0125_H.002%2F'
+                    f'{date_str[:4]}%2F{numday:03d}%2FNLDAS_FORA0125_'
+                    f'H.A{date_str}.{h:02d}00.002.grb&FORMAT=bmM0Lw'
+                    f'&BBOX=25%2C-125%2C53%2C-67&LABEL=NLDAS_FORA0125'
+                    f'_H.A{date_str}.{h:02d}00.002.grb.SUB.nc4&SHORTNAME'
+                    f'=NLDAS_FORA0125_H&SERVICE=L34RS_LDAS&VERSION=1'
+                    f'.02&DATASET_VERSION=002') for h in range(24)]
+
         
     def dl_chirps(self, path=None, start_date=None, end_date=None):
         
@@ -303,8 +335,13 @@ class DataPreprocess:
                           
 
                
-        
 
+dp = DataPreprocess(user='kgavahi', password='491Newyork')
+dp.dl_gldas(path='chirps',
+            start_date='20210101', end_date='20210117',
+            )
+        
+aa
 # dp = DataPreprocess(user='kgavahi', password='491Newyork')
 # dp.dl_modis(path='chirps', product='MYD14.061', 
 #             start_date='20210101', end_date='20210117',
