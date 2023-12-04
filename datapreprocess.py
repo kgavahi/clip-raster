@@ -215,7 +215,31 @@ class DataPreprocess:
         date_str = [str(date)[:10].replace('-', '') for date in date_range]
         numday = [date.timetuple().tm_yday for date in date_range]
         
-
+        
+        
+        
+        prdt_page = f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/{product}/'
+        
+        crawl(prdt_page, max_depth=4, visited=set())
+        
+        aa
+        
+        
+        uf = urllib.request.urlopen(prdt_page, timeout=20)
+        html = uf.read()
+        soup = BeautifulSoup(html, "lxml")
+        link_list = set([link.get('href') for link in soup.find_all('a')]) 
+        filtered_links = [link for link in link_list if 
+                          any(date[:4] in link for date in date_str)]
+        
+        if not filtered_links:
+            print(f'No date available to download for {product}')
+            
+        
+        print(filtered_links)
+        
+        aa
+        
         
         try:
             page_urls = set([(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
@@ -345,27 +369,68 @@ class DataPreprocess:
                   .urs_cookies --keep-session-cookies --user={self.user}\
                       --password={self.password} -P {path}\
                           --content-disposition -i {txt_path}')
-                          
 
-               
+from urllib.parse import urljoin, urlparse                          
+def crawl(url, max_depth=3, visited=set()):
+    # Base case: check if max_depth is reached or if the URL has already been visited
+    if max_depth <= 0 or url in visited:
+        return
 
-dp = DataPreprocess(user='kgavahi', password='491Newyork')
-dp.dl_gldas(path='chirps',
-            start_date='19990101', end_date='20210102',
-            )
+    try:
+        # Send an HTTP request to the URL
+        response = requests.get(url)
+        if response.status_code == 200:
+            # Parse the HTML content
+            soup = BeautifulSoup(response.text, 'html.parser')
+            
+
+            # Process the current page
+
+            print('url', url)
+            #if not any(date[:4] in url for date in ['20000101', '20010101']):
+            #    return
+
+            # Mark the URL as visited
+            visited.add(url)
+
+            # Find all links on the page
+            links = soup.find_all('a', href=True)
+
+            for link in links:
+                # Construct the absolute URL
+                next_url = urljoin(url, link['href'])
+                               
+
+                # Make sure the URL is within the same domain
+                if urlparse(next_url).netloc == urlparse(url).netloc:
+                    if url in next_url:
+                        if '2000' in next_url:
+                            # Recursively crawl the next URL with reduced max_depth
+                            crawl(next_url, max_depth - 1, visited)
+    except Exception as e:
+        print(f"Error processing {url}: {e}")
+
+def process_page(url):
+    # Customize this function to do something with the visited page
+    print(f"Processing: {url}")               
+
+# dp = DataPreprocess(user='kgavahi', password='491Newyork')
+# dp.dl_gldas(path='chirps',
+#             start_date='19990101', end_date='20210102',
+#             )
         
-aa
+
 # dp = DataPreprocess(user='kgavahi', password='491Newyork')
 # dp.dl_modis(path='chirps', product='MYD14.061', 
 #             start_date='20210101', end_date='20210117',
 #             tiles='conus')
     
 
-# dp = DataPreprocess(user='kgavahi', password='491Newyork')
-# dp.dl_gpmL3(path='chirps', product='GPM_3IMERGDF.07/', 
-#             start_date='20010101', end_date='20010105')
+dp = DataPreprocess(user='kgavahi', password='491Newyork')
+dp.dl_gpmL3(path='chirps', product='GPM_3IMERGDF.07', 
+            start_date='19980101', end_date='20010105')
 
-
+aa
 
 da = xr.open_mfdataset('chirps/3B-DAY.*.V07.nc4')
 da = da.precipitation
