@@ -351,7 +351,7 @@ class DataPreprocess:
 
 dp = DataPreprocess(user='kgavahi', password='491Newyork')
 dp.dl_gldas(path='chirps',
-            start_date='20210101', end_date='20210102',
+            start_date='19990101', end_date='20210102',
             )
         
 aa
