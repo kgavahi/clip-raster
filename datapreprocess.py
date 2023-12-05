@@ -215,8 +215,75 @@ class DataPreprocess:
         
         date_str = [str(date)[:10].replace('-', '') for date in date_range]
         numday = [date.timetuple().tm_yday for date in date_range]
+        extns = ['nc', 'HDF', 'xml']
         
         
+        url = f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/{product}/'
+        
+        file_name=[]
+        while not any(extn in file_name for extn in extns):
+            url = get_next_link(url)
+            file_name = url.split('.')[-1]
+      
+        
+        url_split = url.split('/')
+        print(len(url_split))
+
+
+        if len(url_split)==9 and len(url_split[-2])==2:
+  
+            page_urls = set([(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
+                    f'{product}/{date[:4]}/{date[4:6]}/')
+                    for date in date_str])
+
+        if len(url_split)==9 and len(url_split[-2])==3:
+            
+            years = sorted(set([x[:4] for x in date_str]))
+            days = sorted(set(numday))
+            
+            page_urls = []
+            for year in years:
+                year_page = (f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
+                    f'{product}/{year}/')
+                
+                try:
+                    uf = urllib.request.urlopen(year_page, timeout=20)
+                except urllib.error.HTTPError as http_err:
+                    if http_err.code == 404:
+                        print(f'The requested URL {year_page} was not found.')
+                        continue
+                    else:
+                        print(f'HTTP error occurred: {http_err}')                
+                
+                for day in days:
+                
+                    day_page = (f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
+                        f'{product}/{year}/{day}/')   
+    
+                    try:
+                        uf = urllib.request.urlopen(day_page, timeout=20)
+                    except urllib.error.HTTPError as http_err:
+                        if http_err.code == 404:
+                            print(f'The requested URL {day_page} was not found.')
+                            continue
+                        else:
+                            print(f'HTTP error occurred: {http_err}')                
+                    
+                    page_urls.append(day_page)
+                
+        
+        if len(url.split('/'))==8:
+            page_urls = set([(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
+                        f'{product}/{date[:4]}/')
+                        for date in date_str])             
+
+        if len(url.split('/'))==7:
+            page_urls = set([(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
+                        f'{product}/')
+                        for date in date_str])         
+        
+        
+        '''
         uf = urllib.request.urlopen('https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/', timeout=20)
         html = uf.read()        
         soup = BeautifulSoup(html, 'html.parser')        
@@ -225,10 +292,10 @@ class DataPreprocess:
         for prdt in all_prdts:
             prdt = prdt.get('href')
             print(prdt)
-            if prdt == 'GPM_3GPROFF19SSMIS.07/': continue
-            #prdt = 'GPM_3CMB.07/'
+
+            #prdt = 'GPM_3GPROFF19SSMIS.07/'
             url = f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/{prdt}/'
-            extns = ['nc', 'HDF']
+            extns = ['nc', 'HDF', 'xml']
             
             file_name=[]
             while not any(extn in file_name for extn in extns):
@@ -236,7 +303,7 @@ class DataPreprocess:
                 url = get_next_link(url)
                 #print(url)
                 file_name = url.split('.')[-1]
-                #print(file_name)
+                print('file_name', file_name)
             
             print(url.split('/'))
             print(len(url.split('/')))
@@ -313,19 +380,26 @@ class DataPreprocess:
                     print(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/{product}')
                     return
         
-        
+        '''
         
         urls = []
+        page_urls = sorted(page_urls)
         for page_url in page_urls:
-            
-            uf = urllib.request.urlopen(page_url, timeout=20)
+            try:
+                uf = urllib.request.urlopen(page_url, timeout=20)
+            except urllib.error.HTTPError as http_err:
+                if http_err.code == 404:
+                    print(f'The requested URL {page_url} was not found.')
+                    continue
+                else:
+                    print(f'HTTP error occurred: {http_err}')    
             html = uf.read()
             soup = BeautifulSoup(html, "lxml")
             link_list = set([link.get('href') for link in soup.find_all('a')])
             
             filtered_links = [link for link in link_list if 
                               any(date in link for date in date_str)]
-            print(filtered_links)
+
             for link in filtered_links:
                 urls.append(page_url+link)
         
@@ -422,21 +496,15 @@ def get_next_link(prdt_page):
     uf = urllib.request.urlopen(prdt_page, timeout=20)
     html = uf.read()        
     soup = BeautifulSoup(html, 'html.parser')        
-    next_page = soup.find_all('a', href=True)
     
-    # Find the parent directory link
-    parent_dir_link = soup.find('a', href="/data/GPM_L3/")
-    
-    # Find the parent <tr> element
-    parent_tr_element = parent_dir_link.find_parent('tr')
-    
-    # Find the first link after the parent directory link
-    first_link_after_parent = parent_tr_element.find_next('a')
+    # Find the link with the text "Parent Directory"
+    parent_dir_link = soup.find('a', text='Parent Directory')
     
     
-    print(first_link_after_parent['href'])
-    aa
-    next_link = urljoin(prdt_page, next_page.get("href"))    
+    next_page = parent_dir_link.find_next('a')
+
+    next_link = urljoin(prdt_page, next_page.get("href"))  
+
     return next_link                     
 def crawl(url, max_depth=3, visited=set()):
     # Base case: check if max_depth is reached or if the URL has already been visited
@@ -491,8 +559,8 @@ def process_page(url):
     
 
 dp = DataPreprocess(user='kgavahi', password='491Newyork')
-dp.dl_gpmL3(path='chirps', product='GPM_3IMERGDF.07', 
-            start_date='19980101', end_date='20010105')
+dp.dl_gpmL3(path='chirps', product='GPM_3IMERGHHL.06/', 
+            start_date='19980101', end_date='20150105')
 
 aa
 
