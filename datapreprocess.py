@@ -9,6 +9,7 @@ from scipy.spatial import KDTree
 import urllib.request
 from bs4 import BeautifulSoup
 import numpy as np
+from urllib.parse import urljoin, urlparse
 
 class DataPreprocess:
     
@@ -216,29 +217,76 @@ class DataPreprocess:
         numday = [date.timetuple().tm_yday for date in date_range]
         
         
+        uf = urllib.request.urlopen('https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/', timeout=20)
+        html = uf.read()        
+        soup = BeautifulSoup(html, 'html.parser')        
+        all_prdts = soup.find_all('a', href=True)[6:-4]
         
-        
-        prdt_page = f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/{product}/'
-        
-        crawl(prdt_page, max_depth=4, visited=set())
+        for prdt in all_prdts:
+            prdt = prdt.get('href')
+            print(prdt)
+            if prdt == 'GPM_3GPROFF19SSMIS.07/': continue
+            #prdt = 'GPM_3CMB.07/'
+            url = f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/{prdt}/'
+            extns = ['nc', 'HDF']
+            
+            file_name=[]
+            while not any(extn in file_name for extn in extns):
+    
+                url = get_next_link(url)
+                #print(url)
+                file_name = url.split('.')[-1]
+                #print(file_name)
+            
+            print(url.split('/'))
+            print(len(url.split('/')))
+            
+        aa
+        n1 = get_next_link(prdt_page)
+        print(n1)
+        n2 = get_next_link(n1)
+        print(n2)
+        n3 = get_next_link(n2)
+        print(n3)
         
         aa
         
         
+        
+        
+        s=time.time()
+        crawl(prdt_page, max_depth=4, visited=set())
+        print('time:', time.time()-s)
+        aa
+        
         uf = urllib.request.urlopen(prdt_page, timeout=20)
-        html = uf.read()
-        soup = BeautifulSoup(html, "lxml")
-        link_list = set([link.get('href') for link in soup.find_all('a')]) 
+        html = uf.read()        
+        soup = BeautifulSoup(html, 'html.parser')
+        # Find all links on the page
+        link_list = set([link.get('href') for link in soup.find_all('a')])
+
         filtered_links = [link for link in link_list if 
                           any(date[:4] in link for date in date_str)]
         
         if not filtered_links:
             print(f'No date available to download for {product}')
-            
         
-        print(filtered_links)
+
+
+        url_page = urljoin(prdt_page, filtered_links[0])
+        uf = urllib.request.urlopen(url_page, timeout=20)
+        html = uf.read()        
+        soup = BeautifulSoup(html, 'html.parser')
+        # Find all links on the page
+        link_list = set([link.get('href') for link in soup.find_all('a')])
+        for link in link_list:
+            print(link)
+        
         
         aa
+        
+        
+
         
         
         try:
@@ -370,7 +418,26 @@ class DataPreprocess:
                       --password={self.password} -P {path}\
                           --content-disposition -i {txt_path}')
 
-from urllib.parse import urljoin, urlparse                          
+def get_next_link(prdt_page):
+    uf = urllib.request.urlopen(prdt_page, timeout=20)
+    html = uf.read()        
+    soup = BeautifulSoup(html, 'html.parser')        
+    next_page = soup.find_all('a', href=True)
+    
+    # Find the parent directory link
+    parent_dir_link = soup.find('a', href="/data/GPM_L3/")
+    
+    # Find the parent <tr> element
+    parent_tr_element = parent_dir_link.find_parent('tr')
+    
+    # Find the first link after the parent directory link
+    first_link_after_parent = parent_tr_element.find_next('a')
+    
+    
+    print(first_link_after_parent['href'])
+    aa
+    next_link = urljoin(prdt_page, next_page.get("href"))    
+    return next_link                     
 def crawl(url, max_depth=3, visited=set()):
     # Base case: check if max_depth is reached or if the URL has already been visited
     if max_depth <= 0 or url in visited:
@@ -400,13 +467,10 @@ def crawl(url, max_depth=3, visited=set()):
                 # Construct the absolute URL
                 next_url = urljoin(url, link['href'])
                                
+                if url in next_url:
 
-                # Make sure the URL is within the same domain
-                if urlparse(next_url).netloc == urlparse(url).netloc:
-                    if url in next_url:
-                        if '2000' in next_url:
-                            # Recursively crawl the next URL with reduced max_depth
-                            crawl(next_url, max_depth - 1, visited)
+                    # Recursively crawl the next URL with reduced max_depth
+                    crawl(next_url, max_depth - 1, visited)
     except Exception as e:
         print(f"Error processing {url}: {e}")
 
