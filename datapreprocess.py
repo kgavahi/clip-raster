@@ -227,8 +227,23 @@ class DataPreprocess:
       
         
         url_split = url.split('/')
-        print(len(url_split))
+        name_split = url_split[8].split('.')
+        dse_split = name_split[4].split('-')
+        
+        
+        fp = '/'.join(url_split[:6])
+        n1 = '.'.join(name_split[:4])
+        n2 = '.'.join(dse_split[1:])
+        lp = '.'.join(name_split[-3:])
+        
+        
+        s = [f'{fp}/{date[:4]}/{numday:03d}/{n1}.{date}-{n2}.{lp}'
+             for date, numday in zip(date_str, numday)]
+        
+        
 
+        
+        
 
         if len(url_split)==9 and len(url_split[-2])==2:
   
@@ -237,40 +252,13 @@ class DataPreprocess:
                     for date in date_str])
 
         if len(url_split)==9 and len(url_split[-2])==3:
+            page_urls = set([(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
+                f'{product}/{date[:4]}/{numday:03d}/')
+                for date, numday in zip(date_str, numday)])
+            s = time.time()
+            uf = [requests.get(p) for p in page_urls]
+            print(time.time()-s)
             
-            years = sorted(set([x[:4] for x in date_str]))
-            days = sorted(set(numday))
-            
-            page_urls = []
-            for year in years:
-                year_page = (f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
-                    f'{product}/{year}/')
-                
-                try:
-                    uf = urllib.request.urlopen(year_page, timeout=20)
-                except urllib.error.HTTPError as http_err:
-                    if http_err.code == 404:
-                        print(f'The requested URL {year_page} was not found.')
-                        continue
-                    else:
-                        print(f'HTTP error occurred: {http_err}')                
-                
-                for day in days:
-                
-                    day_page = (f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
-                        f'{product}/{year}/{day}/')   
-    
-                    try:
-                        uf = urllib.request.urlopen(day_page, timeout=20)
-                    except urllib.error.HTTPError as http_err:
-                        if http_err.code == 404:
-                            print(f'The requested URL {day_page} was not found.')
-                            continue
-                        else:
-                            print(f'HTTP error occurred: {http_err}')                
-                    
-                    page_urls.append(day_page)
-                
         
         if len(url.split('/'))==8:
             page_urls = set([(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
@@ -291,9 +279,15 @@ class DataPreprocess:
         
         for prdt in all_prdts:
             prdt = prdt.get('href')
-            print(prdt)
+            #print(prdt)
 
             #prdt = 'GPM_3GPROFF19SSMIS.07/'
+            if prdt == 'GPM_3GPROFF19SSMIS.07/': continue
+            if prdt == 'GPM_3GPROFF19SSMIS_DAY.07/': continue
+            if prdt == 'GPM_3GPROFMETOPAMHS.07/': continue
+            if prdt == 'GPM_3GPROFMETOPAMHS_DAY.07/': continue
+            if prdt == 'GPM_3GPROFNOAA18MHS.07/': continue
+            if prdt == 'GPM_3GPROFNOAA18MHS_DAY.07/': continue
             url = f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/{prdt}/'
             extns = ['nc', 'HDF', 'xml']
             
@@ -303,10 +297,11 @@ class DataPreprocess:
                 url = get_next_link(url)
                 #print(url)
                 file_name = url.split('.')[-1]
-                print('file_name', file_name)
+                #print('file_name', file_name)
             
-            print(url.split('/'))
-            print(len(url.split('/')))
+            #print(url.split('/'))
+            url_s = str(url.split('/')[-1])
+            print(url_s.split('.')[4])
             
         aa
         n1 = get_next_link(prdt_page)
@@ -379,8 +374,8 @@ class DataPreprocess:
                     print('Check the following link for available dates:')
                     print(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/{product}')
                     return
-        
         '''
+        
         
         urls = []
         page_urls = sorted(page_urls)
@@ -560,7 +555,7 @@ def process_page(url):
 
 dp = DataPreprocess(user='kgavahi', password='491Newyork')
 dp.dl_gpmL3(path='chirps', product='GPM_3IMERGHHL.06/', 
-            start_date='19980101', end_date='20150105')
+            start_date='19980101', end_date='20020105')
 
 aa
 
