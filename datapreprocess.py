@@ -226,6 +226,9 @@ class DataPreprocess:
             file_name = url.split('.')[-1]
       
         
+      
+        
+        
         url_split = url.split('/')
         name_split = url_split[8].split('.')
         dse_split = name_split[4].split('-')
@@ -255,9 +258,7 @@ class DataPreprocess:
             page_urls = set([(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
                 f'{product}/{date[:4]}/{numday:03d}/')
                 for date, numday in zip(date_str, numday)])
-            s = time.time()
-            uf = [requests.get(p) for p in page_urls]
-            print(time.time()-s)
+
             
         
         if len(url.split('/'))==8:
@@ -381,13 +382,16 @@ class DataPreprocess:
         page_urls = sorted(page_urls)
         for page_url in page_urls:
             try:
-                uf = urllib.request.urlopen(page_url, timeout=20)
+                uf = urllib.request.urlopen(page_url, timeout=30)
             except urllib.error.HTTPError as http_err:
                 if http_err.code == 404:
                     print(f'The requested URL {page_url} was not found.')
+                    print((f'check the https://gpm1.gesdisc.eosdis.nasa.gov'
+                           f'/data/GPM_L3/{product} for available dates.'))
                     continue
                 else:
                     print(f'HTTP error occurred: {http_err}')    
+            print(f'preparing the urls in {page_url}')
             html = uf.read()
             soup = BeautifulSoup(html, "lxml")
             link_list = set([link.get('href') for link in soup.find_all('a')])
