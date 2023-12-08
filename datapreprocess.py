@@ -218,8 +218,6 @@ class DataPreprocess:
       
         
       
-        
-        
         url_split = url.split('/')
         url_s = str(url.split('/')[-1])
         first_date_availa = url_s.split('.')[4][:8]
@@ -382,7 +380,7 @@ class DataPreprocess:
         page_urls = sorted(page_urls)
         for page_url in page_urls:
             try:
-                uf = urllib.request.urlopen(page_url, timeout=30)
+                uf = urllib.request.urlopen(page_url, timeout=120)
             except urllib.error.HTTPError as http_err:
                 if http_err.code == 404:
                     #print(f'The requested URL {page_url} was not found.')
@@ -451,7 +449,7 @@ class DataPreprocess:
 
         page_url = f'https://e4ftl01.cr.usgs.gov/{satellite}/{product}/'
         
-        uf = urllib.request.urlopen(page_url, timeout=20)
+        uf = urllib.request.urlopen(page_url, timeout=120)
         html = uf.read()
         soup = BeautifulSoup(html, "lxml")
         link_list = set([link.get('href') for link in soup.find_all('a')])
@@ -465,7 +463,7 @@ class DataPreprocess:
         urls = []
         for page_url in page_urls:
             
-            uf = urllib.request.urlopen(page_url, timeout=20)
+            uf = urllib.request.urlopen(page_url, timeout=120)
             html = uf.read()
             soup = BeautifulSoup(html, "lxml")
             link_list = set([link.get('href') for link in soup.find_all('a')])
@@ -492,7 +490,7 @@ class DataPreprocess:
                           --content-disposition -i {txt_path}')
 
 def get_next_link(prdt_page):
-    uf = urllib.request.urlopen(prdt_page, timeout=20)
+    uf = urllib.request.urlopen(prdt_page, timeout=120)
     html = uf.read()        
     soup = BeautifulSoup(html, 'html.parser')        
     
@@ -522,13 +520,14 @@ def get_next_link(prdt_page):
 uf = urllib.request.urlopen('https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/', timeout=20)
 html = uf.read()        
 soup = BeautifulSoup(html, 'html.parser')        
-all_prdts = soup.find_all('a', href=True)[6:-4]
+all_prdts = [prdt.get('href') for prdt in soup.find_all('a', href=True)[6:-4]]
 c=1
-for prdt in set(all_prdts):
-    prdt = prdt.get('href')
+S=time.time()
+for prdt in set(sorted(all_prdts)):
+    #prdt = prdt.get('href')
     #print(prdt)
 
-    #prdt = 'GPM_3GPROFF19SSMIS.07/'
+    #prdt = 'GPM_3GPROFF16SSMIS_DAY_CLIM.07'
     if prdt == 'GPM_3GPROFF19SSMIS.07/': continue
     if prdt == 'GPM_3GPROFF19SSMIS_DAY.07/': continue
     if prdt == 'GPM_3GPROFMETOPAMHS.07/': continue
@@ -536,10 +535,12 @@ for prdt in set(all_prdts):
     if prdt == 'GPM_3GPROFNOAA18MHS.07/': continue
     if prdt == 'GPM_3GPROFNOAA18MHS_DAY.07/': continue
     print(f'----------------{c}---{prdt}------start-----------------------------')
-
+    s=time.time()
     dp = DataPreprocess(user='kgavahi', password='491Newyork')
     dp.dl_gpmL3(path='chirps', product=prdt, 
                 start_date='19000101', end_date='20240101')
+    print('time:', time.time()-s)
+    print('total time:', time.time()-S)
     print(f'----------------{c}---{prdt}------finished-----------------------------')
     c+=1
     
