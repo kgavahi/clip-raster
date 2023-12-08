@@ -204,23 +204,12 @@ class DataPreprocess:
         None.
 
         """
-        if end_date==None:
-            date_range = pd.date_range(start=start_date, 
-                                       end=start_date, 
-                                       freq='D')
-        else:
-            date_range = pd.date_range(start=start_date, 
-                                       end=end_date, 
-                                       freq='D')        
-        
-        date_str = [str(date)[:10].replace('-', '') for date in date_range]
-        numday = [date.timetuple().tm_yday for date in date_range]
+
         extns = ['nc', 'HDF', 'xml']
         
         
         url = f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/{product}/'
         
-        url = get_last_link(url)
         
         file_name=[]
         while not any(extn in file_name for extn in extns):
@@ -232,20 +221,29 @@ class DataPreprocess:
         
         
         url_split = url.split('/')
-        name_split = url_split[8].split('.')
-        dse_split = name_split[4].split('-')
+        url_s = str(url.split('/')[-1])
+        first_date_availa = url_s.split('.')[4][:8]
+        
+        if pd.to_datetime(first_date_availa) > pd.to_datetime(start_date):
+            print(f'dates before {first_date_availa} are not available to download')
+            start_date = first_date_availa
+            
+        
+        if end_date==None:
+            date_range = pd.date_range(start=start_date, 
+                                       end=start_date, 
+                                       freq='D')
+        else:
+            date_range = pd.date_range(start=start_date, 
+                                       end=end_date, 
+                                       freq='D')        
+        
+        date_str = [str(date)[:10].replace('-', '') for date in date_range]
+        numday = [date.timetuple().tm_yday for date in date_range]
         
         
-        fp = '/'.join(url_split[:6])
-        n1 = '.'.join(name_split[:4])
-        n2 = '.'.join(dse_split[1:])
-        lp = '.'.join(name_split[-3:])
-        
-        
-        s = [f'{fp}/{date[:4]}/{numday:03d}/{n1}.{date}-{n2}.{lp}'
-             for date, numday in zip(date_str, numday)]
-        
-        
+
+
 
         
         
@@ -304,7 +302,7 @@ class DataPreprocess:
             
             #print(url.split('/'))
             url_s = str(url.split('/')[-1])
-            print(url_s.split('.')[4])
+            print(url_s.split('.')[4][:8])
             
         aa
         n1 = get_next_link(prdt_page)
@@ -387,13 +385,13 @@ class DataPreprocess:
                 uf = urllib.request.urlopen(page_url, timeout=30)
             except urllib.error.HTTPError as http_err:
                 if http_err.code == 404:
-                    print(f'The requested URL {page_url} was not found.')
-                    print((f'check the https://gpm1.gesdisc.eosdis.nasa.gov'
-                           f'/data/GPM_L3/{product} for available dates.'))
+                    #print(f'The requested URL {page_url} was not found.')
+                    #print((f'check the https://gpm1.gesdisc.eosdis.nasa.gov'
+                    #       f'/data/GPM_L3/{product} for available dates.'))
                     continue
                 else:
                     print(f'HTTP error occurred: {http_err}')    
-            print(f'preparing the urls in {page_url}')
+            #print(f'preparing the urls in {page_url}')
             html = uf.read()
             soup = BeautifulSoup(html, "lxml")
             link_list = set([link.get('href') for link in soup.find_all('a')])
@@ -412,7 +410,7 @@ class DataPreprocess:
         if os.path.exists(txt_path): os.remove(txt_path)
         
         with open(txt_path, 'a') as fp:
-            fp.write('\n'.join(set(urls))) 
+            fp.write('\n'.join(set(urls[:1]))) 
             
         # download the files
         os.system(f'wget --load-cookies .urs_cookies --save-cookies \
@@ -486,7 +484,7 @@ class DataPreprocess:
         
         with open(txt_path, 'a') as fp:
             fp.write('\n'.join(set(urls))) 
-            
+        
         # download the files
         os.system(f'wget --load-cookies .urs_cookies --save-cookies \
                   .urs_cookies --keep-session-cookies --user={self.user}\
@@ -499,7 +497,7 @@ def get_next_link(prdt_page):
     soup = BeautifulSoup(html, 'html.parser')        
     
     # Find the link with the text "Parent Directory"
-    parent_dir_link = soup.find('a', text='Parent Directory')
+    parent_dir_link = soup.find('a', string='Parent Directory')
     
     
     next_page = parent_dir_link.find_next('a')
@@ -507,66 +505,8 @@ def get_next_link(prdt_page):
     next_link = urljoin(prdt_page, next_page.get("href"))  
 
     return next_link    
-def get_last_link(prdt_page):
-    uf = urllib.request.urlopen(prdt_page, timeout=20)
-    html = uf.read()        
-    soup = BeautifulSoup(html, 'html.parser')        
-    
-    # Find the link with the text "Parent Directory"
-    parent_dir_link = soup.find_all('td')
-    print(parent_dir_link[-15])
-    
-    next_page = parent_dir_link.find_next('a')
-    
-    
-    
-    
-    aa
-    
-    
-
-    next_link = urljoin(prdt_page, next_page.get("href"))  
-
-    return next_link                  
-def crawl(url, max_depth=3, visited=set()):
-    # Base case: check if max_depth is reached or if the URL has already been visited
-    if max_depth <= 0 or url in visited:
-        return
-
-    try:
-        # Send an HTTP request to the URL
-        response = requests.get(url)
-        if response.status_code == 200:
-            # Parse the HTML content
-            soup = BeautifulSoup(response.text, 'html.parser')
-            
-
-            # Process the current page
-
-            print('url', url)
-            #if not any(date[:4] in url for date in ['20000101', '20010101']):
-            #    return
-
-            # Mark the URL as visited
-            visited.add(url)
-
-            # Find all links on the page
-            links = soup.find_all('a', href=True)
-
-            for link in links:
-                # Construct the absolute URL
-                next_url = urljoin(url, link['href'])
-                               
-                if url in next_url:
-
-                    # Recursively crawl the next URL with reduced max_depth
-                    crawl(next_url, max_depth - 1, visited)
-    except Exception as e:
-        print(f"Error processing {url}: {e}")
-
-def process_page(url):
-    # Customize this function to do something with the visited page
-    print(f"Processing: {url}")               
+              
+             
 
 # dp = DataPreprocess(user='kgavahi', password='491Newyork')
 # dp.dl_gldas(path='chirps',
@@ -578,12 +518,31 @@ def process_page(url):
 # dp.dl_modis(path='chirps', product='MYD14.061', 
 #             start_date='20210101', end_date='20210117',
 #             tiles='conus')
+
+uf = urllib.request.urlopen('https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/', timeout=20)
+html = uf.read()        
+soup = BeautifulSoup(html, 'html.parser')        
+all_prdts = soup.find_all('a', href=True)[6:-4]
+c=1
+for prdt in set(all_prdts):
+    prdt = prdt.get('href')
+    #print(prdt)
+
+    #prdt = 'GPM_3GPROFF19SSMIS.07/'
+    if prdt == 'GPM_3GPROFF19SSMIS.07/': continue
+    if prdt == 'GPM_3GPROFF19SSMIS_DAY.07/': continue
+    if prdt == 'GPM_3GPROFMETOPAMHS.07/': continue
+    if prdt == 'GPM_3GPROFMETOPAMHS_DAY.07/': continue
+    if prdt == 'GPM_3GPROFNOAA18MHS.07/': continue
+    if prdt == 'GPM_3GPROFNOAA18MHS_DAY.07/': continue
+    print(f'----------------{c}---{prdt}------start-----------------------------')
+
+    dp = DataPreprocess(user='kgavahi', password='491Newyork')
+    dp.dl_gpmL3(path='chirps', product=prdt, 
+                start_date='19000101', end_date='20240101')
+    print(f'----------------{c}---{prdt}------finished-----------------------------')
+    c+=1
     
-
-dp = DataPreprocess(user='kgavahi', password='491Newyork')
-dp.dl_gpmL3(path='chirps', product='GPM_3IMERGHHL.06/', 
-            start_date='19980101', end_date='20020105')
-
 aa
 
 da = xr.open_mfdataset('chirps/3B-DAY.*.V07.nc4')
