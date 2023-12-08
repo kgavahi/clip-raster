@@ -529,7 +529,7 @@ S=time.time()
 for prdt in all_prdts:
     #prdt = prdt.get('href')
     #print(prdt)
-
+    time.sleep(60)
     #prdt = 'GPM_3GPROFF16SSMIS_DAY_CLIM.07'
     if prdt == 'GPM_3GPROFF19SSMIS.07/': continue
     if prdt == 'GPM_3GPROFF19SSMIS_DAY.07/': continue
