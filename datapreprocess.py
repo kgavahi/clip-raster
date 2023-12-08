@@ -220,6 +220,8 @@ class DataPreprocess:
         
         url = f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/{product}/'
         
+        url = get_last_link(url)
+        
         file_name=[]
         while not any(extn in file_name for extn in extns):
             url = get_next_link(url)
@@ -504,7 +506,28 @@ def get_next_link(prdt_page):
 
     next_link = urljoin(prdt_page, next_page.get("href"))  
 
-    return next_link                     
+    return next_link    
+def get_last_link(prdt_page):
+    uf = urllib.request.urlopen(prdt_page, timeout=20)
+    html = uf.read()        
+    soup = BeautifulSoup(html, 'html.parser')        
+    
+    # Find the link with the text "Parent Directory"
+    parent_dir_link = soup.find_all('td')
+    print(parent_dir_link[-15])
+    
+    next_page = parent_dir_link.find_next('a')
+    
+    
+    
+    
+    aa
+    
+    
+
+    next_link = urljoin(prdt_page, next_page.get("href"))  
+
+    return next_link                  
 def crawl(url, max_depth=3, visited=set()):
     # Base case: check if max_depth is reached or if the URL has already been visited
     if max_depth <= 0 or url in visited:
