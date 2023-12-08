@@ -521,9 +521,12 @@ uf = urllib.request.urlopen('https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/',
 html = uf.read()        
 soup = BeautifulSoup(html, 'html.parser')        
 all_prdts = [prdt.get('href') for prdt in soup.find_all('a', href=True)[6:-4]]
+all_prdts = set(all_prdts)
+all_prdts = sorted(all_prdts)
+
 c=1
 S=time.time()
-for prdt in set(sorted(all_prdts)):
+for prdt in all_prdts:
     #prdt = prdt.get('href')
     #print(prdt)
 
