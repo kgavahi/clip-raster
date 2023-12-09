@@ -391,7 +391,7 @@ class DataPreprocess:
                     print(f'HTTP error occurred: {http_err}')    
             #print(f'preparing the urls in {page_url}')
             html = uf.read()
-            soup = BeautifulSoup(html, "lxml")
+            soup = BeautifulSoup(html, "html.parser")
             link_list = set([link.get('href') for link in soup.find_all('a')])
             
             filtered_links = [link for link in link_list if 
@@ -451,7 +451,7 @@ class DataPreprocess:
         
         uf = urllib.request.urlopen(page_url, timeout=120)
         html = uf.read()
-        soup = BeautifulSoup(html, "lxml")
+        soup = BeautifulSoup(html, "html.parser")
         link_list = set([link.get('href') for link in soup.find_all('a')])
 
         filtered_links = [link for link in link_list if 
@@ -465,7 +465,7 @@ class DataPreprocess:
             
             uf = urllib.request.urlopen(page_url, timeout=120)
             html = uf.read()
-            soup = BeautifulSoup(html, "lxml")
+            soup = BeautifulSoup(html, "html.parser")
             link_list = set([link.get('href') for link in soup.find_all('a')])
             
             filtered_links = [link for link in link_list if 
@@ -683,7 +683,7 @@ aa
 page_url = 'https://e4ftl01.cr.usgs.gov/MOTA/MCD43A1.061/'
 uf = urllib.request.urlopen(page_url, timeout=20)
 html = uf.read()
-soup = BeautifulSoup(html, "lxml")
+soup = BeautifulSoup(html, "html.parser")
 link_list = set([link.get('href') for link in soup.find_all('a')])
 
 filtered_links = [link for link in link_list if 
