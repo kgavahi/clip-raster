@@ -523,7 +523,7 @@ soup = BeautifulSoup(html, 'html.parser')
 all_prdts = [prdt.get('href') for prdt in soup.find_all('a', href=True)[6:-4]]
 all_prdts = set(all_prdts)
 all_prdts = sorted(all_prdts)
-
+print(len(all_prdts))
 c=1
 S=time.time()
 sl = 300
