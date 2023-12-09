@@ -137,6 +137,9 @@ class DataPreprocess:
                'global_daily/netcdf/p05/by_month/chirps-v2.0.'
                f'{date[:4]}.{date[4:6]}.days_p05.nc')
                 for date in date_str]
+
+        urls = set(urls)
+        urls = sorted(urls) 
                
         # let's save the urls in a text file to 
         # download them with a single wget command
@@ -144,7 +147,7 @@ class DataPreprocess:
         if os.path.exists(txt_path): os.remove(txt_path)
         
         with open(txt_path, 'a') as fp:
-            fp.write('\n'.join(set(urls)))        
+            fp.write('\n'.join(urls))        
         
         
         # download the urls
@@ -170,6 +173,9 @@ class DataPreprocess:
                f'access/daily/0.25deg/{date[:4]}/{date[4:6]}'
                f'/CMORPH_V1.0_ADJ_0.25deg-DLY_00Z_{date}.nc') 
                for date in date_str]
+
+        urls = set(urls)
+        urls = sorted(urls) 
         
         # let's save the urls in a text file to 
         # download them with a single wget command
@@ -177,7 +183,7 @@ class DataPreprocess:
         if os.path.exists(txt_path): os.remove(txt_path)
         
         with open(txt_path, 'a') as fp:
-            fp.write('\n'.join(set(urls))) 
+            fp.write('\n'.join(urls)) 
         
         # download the urls
         os.system(f'wget -P {path} --content-disposition -i {txt_path}')
@@ -206,8 +212,6 @@ class DataPreprocess:
         """
 
         extns = ['nc', 'HDF', 'xml']
-        
-        
         url = f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/{product}/'
         
         
@@ -241,11 +245,6 @@ class DataPreprocess:
         
         
 
-
-
-        
-        
-
         if len(url_split)==9 and len(url_split[-2])==2:
   
             page_urls = set([(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
@@ -269,111 +268,6 @@ class DataPreprocess:
                         f'{product}/')
                         for date in date_str])         
         
-        
-        '''
-        uf = urllib.request.urlopen('https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/', timeout=20)
-        html = uf.read()        
-        soup = BeautifulSoup(html, 'html.parser')        
-        all_prdts = soup.find_all('a', href=True)[6:-4]
-        
-        for prdt in all_prdts:
-            prdt = prdt.get('href')
-            #print(prdt)
-
-            #prdt = 'GPM_3GPROFF19SSMIS.07/'
-            if prdt == 'GPM_3GPROFF19SSMIS.07/': continue
-            if prdt == 'GPM_3GPROFF19SSMIS_DAY.07/': continue
-            if prdt == 'GPM_3GPROFMETOPAMHS.07/': continue
-            if prdt == 'GPM_3GPROFMETOPAMHS_DAY.07/': continue
-            if prdt == 'GPM_3GPROFNOAA18MHS.07/': continue
-            if prdt == 'GPM_3GPROFNOAA18MHS_DAY.07/': continue
-            url = f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/{prdt}/'
-            extns = ['nc', 'HDF', 'xml']
-            
-            file_name=[]
-            while not any(extn in file_name for extn in extns):
-    
-                url = get_next_link(url)
-                #print(url)
-                file_name = url.split('.')[-1]
-                #print('file_name', file_name)
-            
-            #print(url.split('/'))
-            url_s = str(url.split('/')[-1])
-            print(url_s.split('.')[4][:8])
-            
-        aa
-        n1 = get_next_link(prdt_page)
-        print(n1)
-        n2 = get_next_link(n1)
-        print(n2)
-        n3 = get_next_link(n2)
-        print(n3)
-        
-        aa
-        
-        
-        
-        
-        s=time.time()
-        crawl(prdt_page, max_depth=4, visited=set())
-        print('time:', time.time()-s)
-        aa
-        
-        uf = urllib.request.urlopen(prdt_page, timeout=20)
-        html = uf.read()        
-        soup = BeautifulSoup(html, 'html.parser')
-        # Find all links on the page
-        link_list = set([link.get('href') for link in soup.find_all('a')])
-
-        filtered_links = [link for link in link_list if 
-                          any(date[:4] in link for date in date_str)]
-        
-        if not filtered_links:
-            print(f'No date available to download for {product}')
-        
-
-
-        url_page = urljoin(prdt_page, filtered_links[0])
-        uf = urllib.request.urlopen(url_page, timeout=20)
-        html = uf.read()        
-        soup = BeautifulSoup(html, 'html.parser')
-        # Find all links on the page
-        link_list = set([link.get('href') for link in soup.find_all('a')])
-        for link in link_list:
-            print(link)
-        
-        
-        aa
-        
-        
-
-        
-        
-        try:
-            page_urls = set([(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
-                    f'{product}/{date[:4]}/{date[4:6]}/')
-                    for date in date_str]) 
-            uf = [urllib.request.urlopen(p) for p in page_urls]
-
-        except:
-            try:
-                page_urls = set([(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
-                    f'{product}/{date[:4]}/{numday:03d}/')
-                    for date, numday in zip(date_str, numday)]) 
-                uf = [urllib.request.urlopen(p) for p in page_urls]
-            except:
-                try:
-                    page_urls = set([(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/'
-                                f'{product}/{date[:4]}/')
-                                for date in date_str])  
-                    uf = [urllib.request.urlopen(p) for p in page_urls]
-                except:
-                    print('DateError: Some dates are not available for this product')
-                    print('Check the following link for available dates:')
-                    print(f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/{product}')
-                    return
-        '''
         
         
         urls = []
@@ -400,7 +294,8 @@ class DataPreprocess:
             for link in filtered_links:
                 urls.append(page_url+link)
         
-       
+        urls = set(urls)
+        urls = sorted(urls)       
 
         # let's save the urls in a text file to 
         # download them with a single wget command
@@ -408,7 +303,7 @@ class DataPreprocess:
         if os.path.exists(txt_path): os.remove(txt_path)
         
         with open(txt_path, 'a') as fp:
-            fp.write('\n'.join(set(urls[:1]))) 
+            fp.write('\n'.join(urls)) 
             
         # download the files
         os.system(f'wget --load-cookies .urs_cookies --save-cookies \
@@ -473,7 +368,9 @@ class DataPreprocess:
             
             for link in filtered_links:
                 urls.append(page_url+link)
-        
+
+        urls = set(urls)
+        urls = sorted(urls)         
         
         # let's save the urls in a text file to 
         # download them with a single wget command
@@ -481,7 +378,7 @@ class DataPreprocess:
         if os.path.exists(txt_path): os.remove(txt_path)
         
         with open(txt_path, 'a') as fp:
-            fp.write('\n'.join(set(urls))) 
+            fp.write('\n'.join(urls)) 
         
         # download the files
         os.system(f'wget --load-cookies .urs_cookies --save-cookies \
@@ -504,7 +401,15 @@ def get_next_link(prdt_page):
 
     return next_link    
               
-             
+
+dp = DataPreprocess(user='kgavahi', password='491Newyork')
+dp.dl_gpmL3(path='chirps', product='GPM_3IMERGHH.07', 
+            start_date='20150101', end_date='20150110')                
+
+
+
+aa
+
 
 # dp = DataPreprocess(user='kgavahi', password='491Newyork')
 # dp.dl_gldas(path='chirps',
