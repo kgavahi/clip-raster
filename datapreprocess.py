@@ -526,10 +526,12 @@ all_prdts = sorted(all_prdts)
 
 c=1
 S=time.time()
+sl = 300
 for prdt in all_prdts:
     #prdt = prdt.get('href')
     #print(prdt)
-    time.sleep(60)
+    time.sleep(sl)
+
     #prdt = 'GPM_3GPROFF16SSMIS_DAY_CLIM.07'
     if prdt == 'GPM_3GPROFF19SSMIS.07/': continue
     if prdt == 'GPM_3GPROFF19SSMIS_DAY.07/': continue
@@ -543,7 +545,7 @@ for prdt in all_prdts:
     dp.dl_gpmL3(path='chirps', product=prdt, 
                 start_date='19000101', end_date='20240101')
     print('time:', time.time()-s)
-    print('total time:', time.time()-S)
+    print('total time:', time.time()-S-sl*c)
     print(f'----------------{c}---{prdt}------finished-----------------------------')
     c+=1
     
