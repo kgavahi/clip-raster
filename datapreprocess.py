@@ -315,7 +315,7 @@ class DataPreprocess:
     def dl_modis(self, path=None, product=None,
                  start_date=None, end_date=None, tiles=None):            
         
-        assert tiles is list, 'tiles must be a list'
+        assert isinstance(tiles, list), 'tiles must be a list'
         
         if tiles=='conus':
             # 14 tiles that cover the CONUS
