@@ -315,6 +315,8 @@ class DataPreprocess:
     def dl_modis(self, path=None, product=None,
                  start_date=None, end_date=None, tiles=None):            
         
+        assert tiles is list, 'tiles must be a list'
+        
         if tiles=='conus':
             # 14 tiles that cover the CONUS
             tiles = ["h08v04","h08v05","h08v06",
@@ -404,7 +406,7 @@ def get_next_link(prdt_page):
 
 dp = DataPreprocess(user='kgavahi', password='491Newyork')
 dp.dl_modis(path='chirps', product='MOD13A2.061', 
-            start_date='19000101', end_date='20250117',
+            start_date='20000101', end_date='20250117',
             tiles='h08v04')                
 
 
