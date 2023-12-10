@@ -403,8 +403,9 @@ def get_next_link(prdt_page):
               
 
 dp = DataPreprocess(user='kgavahi', password='491Newyork')
-dp.dl_gpmL3(path='chirps', product='GPM_3IMERGHH.07', 
-            start_date='20000101', end_date='20000701')                
+dp.dl_modis(path='chirps', product='MOD13A2.061', 
+            start_date='19000101', end_date='20250117',
+            tiles='h08v04')                
 
 
 
