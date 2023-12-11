@@ -387,6 +387,70 @@ class DataPreprocess:
                   .urs_cookies --keep-session-cookies --user={self.user}\
                       --password={self.password} -P {path}\
                           --content-disposition -i {txt_path}')
+                          
+
+    def dl_persiann(self, path=None, start_date=None, end_date=None):
+        
+        if end_date==None:
+            date_range = pd.date_range(start=start_date, 
+                                       end=start_date, 
+                                       freq='D')
+        else:
+            date_range = pd.date_range(start=start_date, 
+                                       end=end_date, 
+                                       freq='D')        
+        
+        date_str = [str(date)[:10].replace('-', '') for date in date_range]
+
+        page_acc ='https://www.ncei.noaa.gov/data/precipitation-persiann/access/'
+
+        #page_urls = set([page_acc+date[:4] for date in date_str])
+        page_urls = set([urljoin(page_acc, date[:4]+'/') for date in date_str])
+
+
+        urls = []
+        page_urls = sorted(page_urls)
+        for page_url in page_urls:
+            try:
+                uf = urllib.request.urlopen(page_url, timeout=120)
+            except urllib.error.HTTPError as http_err:
+                if http_err.code == 404:
+                    print(f'The requested URL {page_url} was not found.')
+                    print((f'check the {page_acc} for available dates.'))
+                    continue
+                else:
+                    print(f'HTTP error occurred: {http_err}')    
+            #print(f'preparing the urls in {page_url}')
+            html = uf.read()
+            soup = BeautifulSoup(html, "html.parser")
+            link_list = set([link.get('href') for link in soup.find_all('a')])
+            
+            filtered_links = [link for link in link_list if 
+                              any(date in link for date in date_str)]
+            
+            
+            for link in filtered_links:
+
+                urls.append(urljoin(page_url, link))
+        
+        urls = set(urls)
+        urls = sorted(urls)
+
+
+        # let's save the urls in a text file to 
+        # download them with a single wget command
+        txt_path = os.path.join(path, "urls.txt")
+        if os.path.exists(txt_path): os.remove(txt_path)
+        
+        with open(txt_path, 'a') as fp:
+            fp.write('\n'.join(urls))        
+        
+        
+        # download the urls
+        os.system(f'wget -P {path} --content-disposition -i {txt_path}')
+
+
+
 
 def get_next_link(prdt_page):
     uf = urllib.request.urlopen(prdt_page, timeout=120)
@@ -404,10 +468,57 @@ def get_next_link(prdt_page):
     return next_link    
               
 
+
+
+
+
+
 dp = DataPreprocess(user='kgavahi', password='491Newyork')
-dp.dl_gldas(path='chirps',
-            start_date='20210101', end_date='20210102',
-            )               
+dp.dl_persiann(path='chirps',
+            start_date='19820101', end_date='19900101',
+            )
+
+
+
+
+
+aa
+
+
+
+da1 = xr.open_dataset('chirps/CDR_2022-04-17030747pm_2000.nc')
+da2 = xr.open_dataset('chirps/PERSIANN-CDR_v01r01_20000101_c20140523.nc')
+
+
+da2 = da2.assign_coords(lon=(((da2.lon + 180) % 360) - 180))
+print(da1.precip[0])
+print('--------------')
+print(da2.precipitation)
+
+
+lat_daymet = da2.lat
+lon_daymet = da2.lon
+data = da2.precipitation[0]
+
+
+from mpl_toolkits.basemap import Basemap
+m = Basemap(projection='cyl', resolution='l',
+            llcrnrlat=lat_daymet.min(), urcrnrlat =lat_daymet.max(),
+            llcrnrlon=lon_daymet.min(), urcrnrlon =lon_daymet.max()) 
+
+
+pcolormesh = m.pcolormesh(lon_daymet, lat_daymet,
+                          data.T, 
+                          latlon=True, cmap='jet', vmin=0)
+
+import matplotlib.pyplot as plt
+fig = plt.gcf()
+
+fig.colorbar(pcolormesh)  
+# dp = DataPreprocess(user='kgavahi', password='491Newyork')
+# dp.dl_gldas(path='chirps',
+#             start_date='20210101', end_date='20210102',
+#             )               
 
 
 
