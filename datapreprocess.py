@@ -404,9 +404,7 @@ class DataPreprocess:
 
         page_acc ='https://www.ncei.noaa.gov/data/precipitation-persiann/access/'
 
-        #page_urls = set([page_acc+date[:4] for date in date_str])
-        page_urls = set([urljoin(page_acc, date[:4]+'/') for date in date_str])
-
+        page_urls = set([page_acc+date[:4]+'/' for date in date_str])
 
         urls = []
         page_urls = sorted(page_urls)
