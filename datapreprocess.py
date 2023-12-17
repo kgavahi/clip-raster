@@ -476,6 +476,10 @@ dp.dl_persiann(path='chirps',
             start_date='19820101', end_date='19900101',
             )
 
+dp = DataPreprocess(user='kgavahi', password='491Newyork')
+dp.dl_persiann(path='chirps',
+            start_date='19820101', end_date='19900101',
+            )
 
 
   
