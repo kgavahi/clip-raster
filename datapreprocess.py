@@ -479,7 +479,7 @@ dp.dl_persiann(path='chirps',
 
 dp = DataPreprocess(user='kgavahi', password='491Newyork')
 dp.dl_persiann(path='chirps',
-            start_date='2000101', end_date='20050101',
+            start_date='2010101', end_date='20221112',
             )
   
 
