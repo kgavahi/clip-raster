@@ -15,10 +15,6 @@ class DataPreprocess:
     
     
     
-    
-    
-    
-    
     def __init__(self, user=None, password=None):
         
         
