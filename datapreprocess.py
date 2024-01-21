@@ -467,7 +467,7 @@ def get_next_link(prdt_page):
 
 da1 = xr.open_dataset('2011090200.LDASIN_DOMAIN1')
 
-print(da1.RAINRATE)
+print(np.array(da1.RAINRATE))
 
 
 aa
