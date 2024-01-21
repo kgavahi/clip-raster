@@ -465,10 +465,10 @@ def get_next_link(prdt_page):
 
 
 
+da1 = xr.open_dataset('2011090200.LDASIN_DOMAIN1')
 
 
-
-
+aa
 dp = DataPreprocess(user='kgavahi', password='491Newyork')
 dp.dl_persiann(path='chirps',
             start_date='2023101', end_date='20201112',
