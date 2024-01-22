@@ -463,7 +463,7 @@ def get_next_link(prdt_page):
 
 
 
-chirps = xr.open_dataset('chirps/3B-DAY.MS.MRG.3IMERG.20190101-S000000-E235959.V06.nc4')
+chirps = xr.open_dataset('chirps/chirps-v2.0.20190101_p05.nc')
 print(chirps)
 
 import matplotlib.pyplot as plt
@@ -473,8 +473,8 @@ m = Basemap(projection='cyl', resolution='l',
             llcrnrlon=-180, urcrnrlon =180) 
 
 m.drawcoastlines(linewidth=0.5)
-pcolormesh = m.pcolormesh(chirps.lon, chirps.lat,
-                          chirps.HQprecipitation[0], 
+pcolormesh = m.pcolormesh(chirps.longitude, chirps.latitude,
+                          chirps.precip[0], 
                           latlon=True, cmap='gist_ncar_r', vmin=0, vmax=30)
 m.drawcoastlines(linewidth=0.5)
 m.drawparallels(np.arange(-90, 90, 60),
