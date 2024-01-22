@@ -477,7 +477,9 @@ pcolormesh = m.pcolormesh(chirps.lon, chirps.lat,
                           chirps.precip[10], 
                           latlon=True, cmap='gist_ncar')
 
+fig = plt.gcf()
 
+fig.colorbar(pcolormesh)
 
 aa
 
