@@ -465,12 +465,12 @@ def get_next_link(prdt_page):
 
 chirps = xr.open_dataset('chirps/chirps-v2.0.2023.04.days_p05.nc')
 
-
+print(chirps)
 
 from mpl_toolkits.basemap import Basemap
 m = Basemap(projection='cyl', resolution='l',
-            llcrnrlat=lat_daymet.min(), urcrnrlat =lat_daymet.max(),
-            llcrnrlon=lon_daymet.min(), urcrnrlon =lon_daymet.max()) 
+            llcrnrlat=0, urcrnrlat =90,
+            llcrnrlon=-180, urcrnrlon =180) 
 
 
 pcolormesh = m.pcolormesh(chirps.longitude, chirps.latitude,
