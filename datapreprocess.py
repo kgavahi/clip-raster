@@ -463,19 +463,20 @@ def get_next_link(prdt_page):
 
 
 
-chirps = xr.open_dataset('chirps/chirps-v2.0.2023.04.days_p05.nc')
+chirps = xr.open_dataset('chirps/CDR_2022-04-17030747pm_2019.nc')
 
-print(chirps)
+
 
 from mpl_toolkits.basemap import Basemap
 m = Basemap(projection='cyl', resolution='l',
-            llcrnrlat=0, urcrnrlat =90,
+            llcrnrlat=-90, urcrnrlat =90,
             llcrnrlon=-180, urcrnrlon =180) 
 
+m.drawcoastlines(linewidth=0.5)
+pcolormesh = m.pcolormesh(chirps.lon, chirps.lat,
+                          chirps.precip[10], 
+                          latlon=True, cmap='gist_ncar')
 
-pcolormesh = m.pcolormesh(chirps.longitude, chirps.latitude,
-                          daymet_coarse[:, :, 0], 
-                          latlon=True, cmap='jet')
 
 
 aa
