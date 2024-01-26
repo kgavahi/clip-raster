@@ -482,7 +482,7 @@ m.drawparallels(np.arange(-90, 90, 60),
 m.drawmeridians(np.arange(-180, 180, 60),
                 labels=[0, 0, 0, 1])
 
-plt.title('PDFN')
+plt.title('CMORPH')
 # fig = plt.gcf()
 
 # fig.colorbar(pcolormesh)
