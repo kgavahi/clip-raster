@@ -479,8 +479,8 @@ pcolormesh = m.pcolormesh(chirps.lon, chirps.lat,
 m.drawcoastlines(linewidth=0.5)
 m.drawparallels(np.arange(-90, 90, 60),
                 labels=[1, 0, 0, 0])
-# m.drawmeridians(np.arange(-180, 180, 60),
-#                 labels=[0, 0, 0, 1])
+m.drawmeridians(np.arange(-180, 180, 60),
+                labels=[0, 0, 0, 1])
 
 plt.title('CMORPH')
 # fig = plt.gcf()
