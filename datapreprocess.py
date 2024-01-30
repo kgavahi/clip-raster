@@ -483,9 +483,9 @@ m.drawmeridians(np.arange(-180, 180, 60),
                 labels=[0, 0, 0, 1])
 
 plt.title('CMORPH')
-# fig = plt.gcf()
+fig = plt.gcf()
 
-# fig.colorbar(pcolormesh)
+fig.colorbar(pcolormesh)
 
 aa
 
