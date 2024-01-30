@@ -475,7 +475,7 @@ m = Basemap(projection='cyl', resolution='l',
 m.drawcoastlines(linewidth=0.5)
 pcolormesh = m.pcolormesh(chirps.lon, chirps.lat,
                           chirps.cmorph[0], 
-                          latlon=True, cmap='gist_ncar_r', vmin=0)
+                          latlon=True, cmap='gist_ncar_r', vmin=0, vmax=15)
 m.drawcoastlines(linewidth=0.5)
 m.drawparallels(np.arange(-90, 90, 60),
                 labels=[1, 0, 0, 0])
