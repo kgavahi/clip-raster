@@ -489,9 +489,10 @@ def get_next_link(prdt_page):
 
 import matplotlib.pyplot as plt
 
-da1 = xr.open_dataset('2010010100.LDASIN_DOMAIN1')
-swdown = np.array(da1.SWDOWN)
-plt.pcolormesh(swdown[0])
+da1 = xr.open_dataset('201001140000.LSMOUT_DOMAIN1')
+swdown = np.array(da1.SMC)
+swdown = np.where(swdown<0, np.nan, swdown)
+plt.pcolormesh(swdown[0, :, 3, :])
 
 fig = plt.gcf()
 
