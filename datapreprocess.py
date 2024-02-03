@@ -492,7 +492,7 @@ import matplotlib.pyplot as plt
 da1 = xr.open_dataset('201001140000.LSMOUT_DOMAIN1')
 swdown = np.array(da1.SMC)
 swdown = np.where(swdown<0, np.nan, swdown)
-plt.pcolormesh(swdown[0, :, 0, :])
+plt.pcolormesh(swdown[0, :, 1, :])
 
 fig = plt.gcf()
 
