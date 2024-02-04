@@ -810,10 +810,10 @@ chirps_f = np.array(chirps.precip[0]).flatten()
 
 # daymet_coarse = np.empty(len(chirps_f))
 
-# for i in range(len(chirps_f)):
-#     print(i, len(chirps_f))
-#     daymet_coarse[i] = np.nanmean(daymet_f[np.where(arg_dd==i)])
-# daymet_coarse = daymet_coarse.reshape(chirps.precip[0].shape)
+for i in range(len(chirps_f)):
+    print(i, len(chirps_f))
+    daymet_coarse[i] = np.nanmean(daymet_f[np.where(arg_dd==i)])
+daymet_coarse = daymet_coarse.reshape(chirps.precip[0].shape)
 
 
 ##########
