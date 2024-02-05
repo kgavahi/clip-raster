@@ -463,29 +463,29 @@ def get_next_link(prdt_page):
 
 
 
-chirps = xr.open_dataset('chirps/CMORPH_V1.0_ADJ_0.25deg-DLY_00Z_20190101.nc')
-print(chirps)
+# chirps = xr.open_dataset('chirps/CMORPH_V1.0_ADJ_0.25deg-DLY_00Z_20190101.nc')
+# print(chirps)
 
-import matplotlib.pyplot as plt
-from mpl_toolkits.basemap import Basemap
-m = Basemap(projection='cyl', resolution='l',
-            llcrnrlat=-90, urcrnrlat =90,
-            llcrnrlon=-180, urcrnrlon =180) 
+# import matplotlib.pyplot as plt
+# from mpl_toolkits.basemap import Basemap
+# m = Basemap(projection='cyl', resolution='l',
+#             llcrnrlat=-90, urcrnrlat =90,
+#             llcrnrlon=-180, urcrnrlon =180) 
 
-m.drawcoastlines(linewidth=0.5)
-pcolormesh = m.pcolormesh(chirps.lon, chirps.lat,
-                          chirps.cmorph[0], 
-                          latlon=True, cmap='gist_ncar_r', vmin=0, vmax=15)
-m.drawcoastlines(linewidth=0.5)
-m.drawparallels(np.arange(-90, 90, 60),
-                labels=[1, 0, 0, 0])
-m.drawmeridians(np.arange(-180, 180, 60),
-                labels=[0, 0, 0, 1])
+# m.drawcoastlines(linewidth=0.5)
+# pcolormesh = m.pcolormesh(chirps.lon, chirps.lat,
+#                           chirps.cmorph[0], 
+#                           latlon=True, cmap='gist_ncar_r', vmin=0, vmax=15)
+# m.drawcoastlines(linewidth=0.5)
+# m.drawparallels(np.arange(-90, 90, 60),
+#                 labels=[1, 0, 0, 0])
+# m.drawmeridians(np.arange(-180, 180, 60),
+#                 labels=[0, 0, 0, 1])
 
-plt.title('CMORPH')
-fig = plt.gcf()
+# plt.title('CMORPH')
+# fig = plt.gcf()
 
-fig.colorbar(pcolormesh)
+# fig.colorbar(pcolormesh)
 
 import matplotlib.pyplot as plt
 
