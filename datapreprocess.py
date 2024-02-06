@@ -490,7 +490,7 @@ def get_next_link(prdt_page):
 import matplotlib.pyplot as plt
 
 da1 = xr.open_dataset('wrfout_d01_2012-01-01_00%3A00%3A00')
-swdown = np.array(da1.RAINNC)
+swdown = np.array(da1.ZNU)
 #swdown = np.where(swdown<0, np.nan, swdown)
 plt.pcolormesh(swdown[0, :, :])
 
