@@ -487,16 +487,16 @@ def get_next_link(prdt_page):
 
 # fig.colorbar(pcolormesh)
 
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
-da1 = xr.open_dataset('2010010100.LDASIN_DOMAIN12')
-swdown = np.array(da1.SWDOWN)
-swdown = np.where(swdown<0, np.nan, swdown)
-plt.pcolormesh(swdown[0, :, :])
+# da1 = xr.open_dataset('2010010100.LDASIN_DOMAIN12')
+# swdown = np.array(da1.SWDOWN)
+# swdown = np.where(swdown<0, np.nan, swdown)
+# plt.pcolormesh(swdown[0, :, :])
 
-fig = plt.gcf()
+# fig = plt.gcf()
 
-plt.colorbar()
+# plt.colorbar()
 
 
 aa
