@@ -79,7 +79,7 @@ def build_model_ED(train_x, train_y, val_x, val_y):
 def build_model_naive(train_x, train_y, val_x, val_y):
 
     # define parameters
-    verbose, epochs, batch_size = 0, 70, 16
+    verbose, epochs, batch_size = 0, 100, 16
     n_timesteps, n_features, n_outputs = train_x.shape[1], train_x.shape[2], train_y.shape[1]
     # define model
     model = Sequential()
@@ -128,7 +128,33 @@ df.set_index('date', inplace=True)
 #desired_columns = ['swe_daymet', 'swe_UAZ', 'swe_GLDAS', 'streamflow']
 #df = df[desired_columns]
 
-aa
+desired_columns = ['snow_depth_water_equivalent_mean', 'surface_net_solar_radiation_mean',
+       'surface_net_thermal_radiation_mean', 'surface_pressure_mean',
+       'temperature_2m_mean', 'dewpoint_temperature_2m_mean',
+       'u_component_of_wind_10m_mean', 'v_component_of_wind_10m_mean',
+       'volumetric_soil_water_layer_1_mean',
+       'volumetric_soil_water_layer_2_mean',
+       'volumetric_soil_water_layer_3_mean',
+       'volumetric_soil_water_layer_4_mean', 'snow_depth_water_equivalent_min',
+       'surface_net_thermal_radiation_min',
+       'surface_pressure_min', 'temperature_2m_min',
+       'dewpoint_temperature_2m_min', 'u_component_of_wind_10m_min',
+       'v_component_of_wind_10m_min', 'volumetric_soil_water_layer_1_min',
+       'volumetric_soil_water_layer_2_min',
+       'volumetric_soil_water_layer_3_min',
+       'volumetric_soil_water_layer_4_min', 'snow_depth_water_equivalent_max',
+       'surface_net_solar_radiation_max', 'surface_net_thermal_radiation_max',
+       'surface_pressure_max', 'temperature_2m_max',
+       'dewpoint_temperature_2m_max', 'u_component_of_wind_10m_max',
+       'v_component_of_wind_10m_max', 'volumetric_soil_water_layer_1_max',
+       'volumetric_soil_water_layer_2_max',
+       'volumetric_soil_water_layer_3_max',
+       'volumetric_soil_water_layer_4_max', 'total_precipitation_sum',
+       'potential_evaporation_sum', 'swe_daymet', 'swe_GLDAS',
+       'swe_UAZ', 'streamflow']
+df = df[desired_columns]
+
+
 # plot some columns
 import matplotlib.pyplot as plt
 plot_cols = ['streamflow']
@@ -141,7 +167,7 @@ plot_features.index = df.index[:480]
 _ = plot_features.plot(subplots=True)
 
 
-print(df.describe().transpose())
+#print(df.describe().transpose())
 
 # train test val split (val split will be done inside the model)
 n = len(df)
@@ -181,8 +207,8 @@ X_seq_test, y_seq_test = drop_nans(X_seq_test, y_seq_test)
 model, history = build_model_naive(X_seq_tr, y_seq_tr, X_seq_val, y_seq_val)
 
 # Check validation loss for overfitting
-print(history.history.keys())
-print(history.history['val_loss'])
+#print(history.history.keys())
+#print(history.history['val_loss'])
 plt.pause(0.1)
 __ = plt.plot(history.history['loss'])
 __ = plt.plot(history.history['val_loss'])
@@ -191,9 +217,16 @@ yhat = model.predict(X_seq_test, verbose=0)
 
 
 yhat = (yhat * train_std['streamflow']) + train_mean['streamflow']
+yhat = yhat.reshape(yhat.shape[0], 1)
 
 y_seq_test = (y_seq_test * train_std['streamflow']) + train_mean['streamflow']
 
+from sklearn.metrics import mean_squared_error, r2_score
+# Calculate R2 and MSE
+r2  = r2_score(yhat, y_seq_test)
+mse = mean_squared_error(yhat, y_seq_test)
+
+print('r2:', r2, 'mse', mse)
 
 plt.pause(0.1)
 __ = plt.plot(yhat)
