@@ -6,46 +6,72 @@ Created on Sat Feb 17 14:00:58 2024
 """
 
 from Historic_Crypto import HistoricalData
-import pandas as pd
-df = HistoricalData('BTC-USD',86400,'2020-01-01-00-00').retrieve_data()
-
-capital = 100/7 * len(df)
-curretn_price = df['close'][-1]
+import yfinance as yf
 
 
+start_date = '2017-12-18-00-00'
+end_date = '2020-12-18-00-00'
+df_stk = yf.download('VTI', start_date[:10], end_date[:10])
+df_stk.columns = [x.lower() for x in df_stk.columns]
+df_btc = HistoricalData('BTC-USD', 86400,
+                        start_date, 
+                        end_date).retrieve_data()
+df_eth = HistoricalData('ETH-USD', 86400,
+                        start_date, 
+                        end_date).retrieve_data()
 
-def alwaysBuy(df, capital, curretn_price):
+capital_stk = 35272
+capital_btc = 21920
+capital_eth = 21920
+
+
+
+
+def alwaysBuy(df, capital):
     
-
-    buy_price = 10390/len(df)
-    print('buy price alwaysBuy', buy_price)
-    print('capital', buy_price*len(df))
+    curretn_price = df['close'][-1]
+    buy_price = capital/len(df)
+    print('buy price daily', f'${buy_price:,.2f}')
+    print('capital', f'${buy_price*len(df):,.2f}')
     
 
     df['p95'] = curretn_price/((df['high']+df['low'])/2) * buy_price
 
     
     tot_return = df['p95'].sum()
+
     
     return tot_return
 
-def alwaysBuyWeekly(df, capital, curretn_price):
+def alwaysBuyWeekly(df, capital):
     
-
-    buy_price = 100
-    print('buy price alwaysBuy', buy_price)
+    curretn_price = df['close'][-1]
+    buy_price = capital/len(df) * 7
+    print('buy price weekly', f'${buy_price:,.2f}')
     
-    #df['p95'] = curretn_price/(df['open']) * buy_price
     df['p95'] = curretn_price/((df['high']+df['low'])/2) * buy_price
-    #df['p95'] = curretn_price/(df['high']) * buy_price
     
     tot_return = df[::7]['p95'].sum()
     
-    return tot_return
+    return f'${tot_return:,.2f}'
 
 print('\n')
-#print('capital', capital)
-print('alwaysBuy:',alwaysBuy(df, capital, curretn_price))
-#print('alwaysBuyWeekly:',alwaysBuyWeekly(df, capital, curretn_price))
+print('VTI')
+r = alwaysBuy(df_stk, capital_stk)
+print('Return', f'${r:,.2f}')
+print(f'{r/capital_stk:.2f}')
+
+print('\n')
+print('BTC')
+r = alwaysBuy(df_btc, capital_btc)
+print('Return', f'${r:,.2f}')
+print(f'{r/capital_btc:.2f}')
+
+print('\n')
+print('ETH')
+r = alwaysBuy(df_eth, capital_eth)
+print('Return', f'${r:,.2f}')
+print(f'{r/capital_eth:.2f}')
+
 
 

@@ -8,23 +8,14 @@ Created on Sat Feb 17 15:21:51 2024
 import yfinance as yf
 import pandas as pd
 
-date = '2020-01-01'
-end_date = '2024-02-17'
+date = '2017-12-18'
+end_date = '2024-02-18'
 # Get the data for the stock AAPL
 df = yf.download('VTI',date, end_date)
-
-from datetime import datetime
-date_format = "%Y-%m-%d"
-
-a = datetime.strptime(date, date_format)
-b = datetime.strptime(end_date, date_format)
-
-delta = b - a
-
-print(delta.days) 
+print('\n')
 
 
-capital = 100/7 * delta.days
+capital = 2000
 curretn_price = df['Close'][-1]
 
 
@@ -33,8 +24,9 @@ curretn_price = df['Close'][-1]
 def alwaysBuy(df, capital, curretn_price):
     
 
-    buy_price = 10
-    print('capital', len(df)*10)
+    buy_price = capital/len(df)
+    print('buy_price', f'${buy_price:,.2f}')
+    print('capital', f'${capital:,.2f}')
     
     df['p95'] = curretn_price/((df['High']+df['Low'])/2) * buy_price
     
@@ -42,6 +34,7 @@ def alwaysBuy(df, capital, curretn_price):
     
     return tot_return
 
-
-print('alwaysBuy', alwaysBuy(df, capital, curretn_price))
+r = alwaysBuy(df, capital, curretn_price)
+print('Return', f'${r:,.2f}')
+print(f'{r/capital:.2f}')
 
