@@ -499,6 +499,11 @@ def get_next_link(prdt_page):
 # plt.colorbar()
 
 
+
+da1 = xr.open_dataset('daymet_v4_tmin_annavg_na_1983.nc')
+
+da1.tmin.plot()
+
 aa
 dp = DataPreprocess(user='kgavahi', password='491Newyork')
 dp.dl_persiann(path='chirps',
