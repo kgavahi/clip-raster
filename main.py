@@ -222,20 +222,36 @@ data = np.zeros([10, 10])
 
 
 
-lat = np.array(da.y)
-lon = np.array(da.x)
+y = np.array(da.lat)
+x = np.array(da.lon)
 
-left = -1653538.7022861766
-right = -1640148.923308598
-up = -185861.66994869243
-down = -203808.56799759436
-x, y = np.meshgrid(lon, lat)
+# left = 920447.809609
+# right = 952666.027796
+# up = -497242.098049
+# down = -531574.515454
+left = -89.182509
+right = -88.815952
+up = 37.229708
+down = 36.915544
+#x, y = np.meshgrid(x, y)
 
-x2 = x[x>left]
+mask = (x >= left) & (x <= right) & (y<=up) & (y>=down)
 
-t = np.where( (x>left) & (x<right) & (y>down) & (y<up))
+x2 = x[:, mask.any(axis=0)]
+x2 = x2[mask.any(axis=1), :]
 
-print(t)
+y2 = y[:, mask.any(axis=0)]
+y2 = y2[mask.any(axis=1), :]
+
+print((x2[-1, -1] - x2[0, 0]) / (x2.shape[1]-1))
+print((y2[-1, -1] - y2[0, 0]) / (y2.shape[0]-1))
+
+#print((x[-1, -1] - x[0, 0]) / (x.shape[1]-1))
+#print((y[-1, -1] - y[0, 0]) / (y.shape[0]-1))
+
+# print((x[-1] - x[0]) / (x.shape[0]-1))
+# print((y[-1] - y[0]) / (y.shape[0]-1))
+
 
 aa
 cell_size = 1000
