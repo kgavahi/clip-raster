@@ -5,7 +5,7 @@ from inpoly import inpoly2
 from numba import jit
 from sklearn.metrics import pairwise_distances_argmin
 from scipy.spatial import KDTree
-
+import geopandas as gpd
 class ClipRaster:
     """Clip raster class for clipping 2D raster files using a shapefile. 
     The clip raster class can also calculate weighted average over the shapefile
@@ -53,7 +53,7 @@ class ClipRaster:
     
             self.shape = (lat.shape[0], lat.shape[1])
 
-    def mask_shp(self, shp_path: str, scale_factor=1):
+    def mask_shp(self, shp_path: str, crs=None, scale_factor=1):
         assert scale_factor >= 1, "scale_factor is less than one"
         """
         
@@ -74,11 +74,20 @@ class ClipRaster:
             inside cells are the percentage of the area covered by the shapefile.
 
         """
-        # TODO: assert that the shapefile file has only one shapefile in it.
-        shp = shapefile.Reader(shp_path)
-
-        # Get the polygon vertices of the basin
-        tupVerts = shp.shapes()[0].points
+        if crs:
+            shp = gpd.read_file(shp_path)
+            shp = shp.to_crs(crs)
+            
+            tupVerts = shp.geometry[0].exterior.coords.xy
+            tupVerts = np.column_stack((tupVerts[0],tupVerts[1]))
+            
+        else:
+            
+            # TODO: assert that the shapefile file has only one shapefile in it.
+            shp = shapefile.Reader(shp_path)
+    
+            # Get the polygon vertices of the basin
+            tupVerts = shp.shapes()[142].points
 
         if scale_factor == 1:
 
@@ -95,6 +104,8 @@ class ClipRaster:
             down = np.min(tupVerts_np[:, 1])
             left = np.min(tupVerts_np[:, 0])
             right = np.max(tupVerts_np[:, 0])
+            
+            print(left, right, up, down)
             
                 
             # Create new coordinates for the downscaled grid

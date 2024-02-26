@@ -164,59 +164,60 @@ def mod_lat_lon(mod):
 # nldas_w = nldas * weights
 
 # wxr_mean = np.array(nldas_w.sum(dim=('lat', 'lon')).to_array()).ravel()
-da = xr.open_dataset('daymet_v4_daily_na_tmax_2011.nc')
+# da = xr.open_dataset('daymet_v4_daily_na_tmax_2011.nc')
 
-data = np.zeros([10, 10])
+# data = np.zeros([10, 10])
 
 
 
-lat = np.array(da.y)
-lon = np.array(da.x)
-points = FTranspose(lon, lat)
-import geopandas as gpd
-from pyproj import CRS
+# lat = np.array(da.y)
+# lon = np.array(da.x)
+# points1 = FTranspose(lon, lat)
+# import geopandas as gpd
+# from pyproj import CRS
+# shp_path = 'C:/Users/kgavahi/Desktop/R/ET_679gages/Export_Output.shp'
+# # TODO: assert that the shapefile file has only one shapefile in it.
+# s1 = time.time()
+# shp = shapefile.Reader(shp_path)
+# for s in shp.shapes():
+# # Get the polygon vertices of the basin
+#     tupVerts1 = s.points
+# print('s1', time.time()-s1)
+
+# isin, ison = inpoly2(points1, tupVerts1)
+
+# shp_path = 'C:/Users/kgavahi/Desktop/R/ET_679gages/ET_679gages.shp'
+# x, y = np.meshgrid(lon, lat)
+# xf, yf = x.flatten(), y.flatten()
+# points2 = (xf, yf)
+
+
+# s2 = time.time()
+# shps = gpd.read_file(shp_path)
+
+# daymet_crs = '+proj=lcc +lon_0=-100 +lat_0=42.5 +x_0=0 +y_0=0 +lat_1=25 +lat_2=60 +ellps=WGS84'
+
+# shps = shps.to_crs(daymet_crs)
+
+# for geom in shps.geometry:
+#     tupVerts2 = geom.exterior.coords.xy
+#     tupVerts2 = np.column_stack((tupVerts2[0],tupVerts2[1]))
+# print('s2', time.time()-s2)
+
+
+
+# isin2, ison2 = inpoly2(points1, tupVerts2)
+
+# print(np.all(isin==isin2))
+
+
+
 shp_path = 'C:/Users/kgavahi/Desktop/R/ET_679gages/Export_Output.shp'
-# TODO: assert that the shapefile file has only one shapefile in it.
-s1 = time.time()
-shp = shapefile.Reader(shp_path)
-for s in shp.shapes():
-# Get the polygon vertices of the basin
-    tupVerts = s.points
-print('s1', time.time()-s1)
 
 
-
-shp_path = 'C:/Users/kgavahi/Desktop/R/ET_679gages/ET_679gages.shp'
-x, y = np.meshgrid(lon, lat)
-xf, yf = x.flatten(), y.flatten()
-points = (xf, yf)
-
-
-s2 = time.time()
-shps = gpd.read_file(shp_path)
-
+da = xr.open_dataset('daymet_v4_daily_na_tmax_2011.nc')
 daymet_crs = '+proj=lcc +lon_0=-100 +lat_0=42.5 +x_0=0 +y_0=0 +lat_1=25 +lat_2=60 +ellps=WGS84'
 
-shps = shps.to_crs(daymet_crs)
-
-for geom in shps.geometry:
-    tupVerts2 = geom.exterior.coords.xy
-    #tupVerts2 = np.column_stack((tupVerts2[0],tupVerts2[1]))
-print('s2', time.time()-s2)
-
-
-isin, ison = inpoly2(points, tupVerts)
-isin2, ison2 = inpoly2(points, tupVerts2)
-
-print(np.all(isin==isin2))
-
-aa
-
-
-
-
-da = xr.open_dataset('daymet_v4_daily_na_tmax_2011.nc')
-
 data = np.zeros([10, 10])
 
 
@@ -224,11 +225,25 @@ data = np.zeros([10, 10])
 lat = np.array(da.y)
 lon = np.array(da.x)
 
+left = -1653538.7022861766
+right = -1640148.923308598
+up = -185861.66994869243
+down = -203808.56799759436
+x, y = np.meshgrid(lon, lat)
+
+x2 = x[x>left]
+
+t = np.where( (x>left) & (x<right) & (y>down) & (y<up))
+
+print(t)
+
+aa
 cell_size = 1000
 
 s=time.time()
-r_da = ClipRaster(data, lat, lon, cell_size)
-weights, landmask = r_da.mask_shp(shp_path, scale_factor=1)
+import clipraster as cr
+r_da = cr.open_raster(data, lat, lon, cell_size)
+weights, landmask = r_da.mask_shp(shp_path, scale_factor=10)
 
 
 
@@ -241,18 +256,19 @@ da = da.assign(weights=(['y','x'], weights))
 
 da = da.where(da.landmask, drop=True)
 
-da.tmax[0].plot()
-
-da = da.tmax * da.weights
-
-da = da.sum(dim=('y', 'x'))
-print((time.time()-s)*679)
 
 
+da_w = da.tmax * da.weights
 
-da.plot()
+da_sum = da_w.sum(dim=('y', 'x'))
+print((time.time()-s)*679/3600, 'hr')
 
-df2 = da.to_dataframe(name='my_data')
+da_w[0].plot()
+
+plt.pause(.1)
+da_sum.plot()
+
+df300 = da_sum.to_dataframe(name='my_data')
 
 
 
