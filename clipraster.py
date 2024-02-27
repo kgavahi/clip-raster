@@ -89,7 +89,7 @@ class ClipRaster:
             shp = gpd.read_file(shp_path)
             shp = shp.to_crs(crs)
             
-            tupVerts = shp.geometry[0].exterior.coords.xy
+            tupVerts = shp.geometry[3].exterior.coords.xy
             tupVerts = np.column_stack((tupVerts[0],tupVerts[1]))
             
         else:
@@ -98,43 +98,63 @@ class ClipRaster:
             shp = shapefile.Reader(shp_path)
     
             # Get the polygon vertices of the basin
-            tupVerts = shp.shapes()[0].points
+            tupVerts = shp.shapes()[3].points
 
-        if scale_factor == 1:
-            
-            
-            # Create a mask for the shapefile
-            mask = mask_with_vert_points(tupVerts, self.lat, self.lon)
-            mask = mask.reshape(self.shape)
 
-            weights = mask / np.sum(mask)
+        # Get the boundries of the basin
+        tupVerts_np = np.array(tupVerts)
+        up = np.max(tupVerts_np[:, 1]) + 2*self.cell_size
+        down = np.min(tupVerts_np[:, 1]) - 2*self.cell_size
+        left = np.min(tupVerts_np[:, 0]) - 2*self.cell_size
+        right = np.max(tupVerts_np[:, 0]) + 2*self.cell_size
 
-        else:
-            # Get the boundries of the basin
-            tupVerts_np = np.array(tupVerts)
-            up = np.max(tupVerts_np[:, 1])
-            down = np.min(tupVerts_np[:, 1])
-            left = np.min(tupVerts_np[:, 0])
-            right = np.max(tupVerts_np[:, 0])
             
-            
+        isEmpty = True
+        
+        while isEmpty:
+            print(scale_factor)
+            if scale_factor == 1:
                 
-            # Create new coordinates for the downscaled grid
-            new_lon = np.arange(left, right, self.cell_size/scale_factor)
-            new_lat = np.arange(down, up, self.cell_size/scale_factor)
-            
-            
-            # Create a mask for the shapefile
-            mask_new = mask_with_vert_points(tupVerts, new_lat, new_lon)
-            
-            weights = np.zeros(self.shape)
-            
-            weights = CalW2(mask_new, 
-                                  self.lat, self.lon, 
-                                  new_lat, new_lon, 
-                                  self.shape)
-            
-            mask = weights > 0          
+                
+                # Create a mask for the shapefile
+                mask = mask_with_vert_points(tupVerts, self.lat, self.lon)
+                mask = mask.reshape(self.shape)
+
+                if not np.sum(mask) > 0:
+                    scale_factor *= 2
+                    continue
+                else: isEmpty=False
+
+    
+                weights = mask / np.sum(mask)
+    
+            else:
+
+                
+                # Create new coordinates for the downscaled grid
+                new_lon = np.arange(left, right, self.cell_size/scale_factor)
+                new_lat = np.arange(down, up, self.cell_size/scale_factor)
+                
+                
+                # Create a mask for the shapefile
+                mask_new = mask_with_vert_points(tupVerts, new_lat, new_lon)
+                
+                if not np.sum(mask_new) > 0:
+                    scale_factor *= 2
+                    continue
+                else: isEmpty=False
+                    
+                print(mask_new)
+                
+                weights = np.zeros(self.shape)
+                
+                weights = CalW5(mask_new, 
+                                      self.lat, self.lon, 
+                                      new_lat, new_lon, 
+                                      self.shape)
+                
+                
+                mask = weights > 0          
             
 
             # # Create a mask for the shapefile
@@ -474,8 +494,40 @@ def CalW2(mask, lat, lon, new_lat, new_lon, shape):
     weights = weights.flatten()
     
     weights[unique] =+ counts
-    
+      
     weights /= np.sum(weights)
+    
+    weights = weights.reshape(shape)
+    
+    return weights
+
+
+def CalW5(mask, lat, lon, new_lat, new_lon, shape):
+    
+    weights = np.zeros(shape)
+    
+    x, y = np.meshgrid(new_lon, new_lat)
+    points = FTranspose(x, y)[mask]
+
+    points_product = FTranspose(lon, lat)
+    
+    kdtree = KDTree(points_product)
+    d, arg_dd = kdtree.query(points)
+    
+    unique_m, counts_m = np.unique(arg_dd, return_counts=True)
+    
+
+
+    points = FTranspose(x, y)
+    d, arg_dd = kdtree.query(points)
+    
+    unique_all, counts_all = np.unique(arg_dd, return_counts=True)
+    
+    weights = weights.flatten()
+    
+
+    
+    weights[unique_m] = counts_m / counts_all[np.isin(unique_all, unique_m)]
     
     weights = weights.reshape(shape)
     

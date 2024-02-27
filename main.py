@@ -212,7 +212,7 @@ def mod_lat_lon(mod):
 
 
 
-shp_path = 'C:/Users/kgavahi/Desktop/test/s_wgs.shp'
+shp_path = 'C:/Users/kgavahi/Desktop/test/vsb.shp'
 
 
 da = xr.open_dataset('daymet_v4_daily_na_tmax_2011.nc')
@@ -221,9 +221,8 @@ daymet_crs = '+proj=lcc +lon_0=-100 +lat_0=42.5 +x_0=0 +y_0=0 +lat_1=25 +lat_2=6
 data = np.zeros([10, 10])
 
 
-
-lat = np.array(da.lat)
-lon = np.array(da.lon)
+lat = np.array(da.y)
+lon = np.array(da.x)
 
 # # left = 1868399.549301
 # # right = 1872725.995348
@@ -259,10 +258,12 @@ lon = np.array(da.lon)
 
 s=time.time()
 import clipraster as cr
+
+sr = time.time()
 r_da = cr.open_raster(data, lat, lon)
-weights, landmask = r_da.mask_shp(shp_path, scale_factor=1)
+weights, landmask = r_da.mask_shp(shp_path, scale_factor=10, crs=daymet_crs)
 
-
+print('cr time:', time.time()-sr)
 
 
 
@@ -274,10 +275,12 @@ da = da.assign(weights=(['y','x'], weights))
 da = da.where(da.landmask, drop=True)
 
 
+x, y = np.meshgrid(da.x, da.y)
 
-da_w = da.tmax * da.weights
+#da_w = da.tmax * da.weights
+da_w = da.tmax * da.weights 
 
-da_sum = da_w.sum(dim=('y', 'x'))
+da_sum = da_w.sum(dim=('y', 'x')) / (np.sum(da.weights))
 print((time.time()-s)*679/3600, 'hr')
 
 da_w[0].plot()
