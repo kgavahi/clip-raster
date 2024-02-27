@@ -212,7 +212,7 @@ def mod_lat_lon(mod):
 
 
 
-shp_path = 'C:/Users/kgavahi/Desktop/R/ET_679gages/Export_Output.shp'
+shp_path = 'C:/Users/kgavahi/Desktop/test/s_wgs.shp'
 
 
 da = xr.open_dataset('daymet_v4_daily_na_tmax_2011.nc')
@@ -222,44 +222,45 @@ data = np.zeros([10, 10])
 
 
 
-y = np.array(da.lat)
-x = np.array(da.lon)
+lat = np.array(da.lat)
+lon = np.array(da.lon)
 
-# left = 1868399.549301
-# right = 1872725.995348
-# up = -124577.186226
-# down = -126749.898316
-left = -89.182509
-right = -88.815952
-up = 37.229708
-down = 36.915544
-#x, y = np.meshgrid(x, y)
+# # left = 1868399.549301
+# # right = 1872725.995348
+# # up = -124577.186226
+# # down = -126749.898316
+# left = -77.194949
+# right = -77.149701
+# up = 38.899723
+# down = 38.872626
+# # x, y = np.meshgrid(x, y)
+# s = time.time()
+# mask = ((x >= left) & (x <= right)) & ((y<=up) & (y>=down))
 
-mask = (x >= left) & (x <= right) & (y<=up) & (y>=down)
+# x2 = x[:, mask.any(axis=0)]
+# x2 = x2[mask.any(axis=1), :]
 
-x2 = x[:, mask.any(axis=0)]
-x2 = x2[mask.any(axis=1), :]
+# y2 = y[:, mask.any(axis=0)]
+# y2 = y2[mask.any(axis=1), :]
 
-y2 = y[:, mask.any(axis=0)]
-y2 = y2[mask.any(axis=1), :]
+# print((x2[-1, -1] - x2[0, 0]) / (x2.shape[1]-1))
+# print((y2[-1, -1] - y2[0, 0]) / (y2.shape[0]-1))
 
-print((x2[-1, -1] - x2[0, 0]) / (x2.shape[1]-1))
-print((y2[-1, -1] - y2[0, 0]) / (y2.shape[0]-1))
+# print('t:', time.time()-s)
 
-#print((x[-1, -1] - x[0, 0]) / (x.shape[1]-1))
-#print((y[-1, -1] - y[0, 0]) / (y.shape[0]-1))
+# print((x[-1, -1] - x[0, 0]) / (x.shape[1]-1))
+# print((y[-1, -1] - y[0, 0]) / (y.shape[0]-1))
 
 # print((x[-1] - x[0]) / (x.shape[0]-1))
 # print((y[-1] - y[0]) / (y.shape[0]-1))
 
 
-aa
-cell_size = 1000
+
 
 s=time.time()
 import clipraster as cr
-r_da = cr.open_raster(data, lat, lon, cell_size)
-weights, landmask = r_da.mask_shp(shp_path, scale_factor=10)
+r_da = cr.open_raster(data, lat, lon)
+weights, landmask = r_da.mask_shp(shp_path, scale_factor=1)
 
 
 
@@ -285,7 +286,6 @@ plt.pause(.1)
 da_sum.plot()
 
 df300 = da_sum.to_dataframe(name='my_data')
-
 
 
 

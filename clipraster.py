@@ -30,7 +30,7 @@ class ClipRaster:
 
     """
 
-    def __init__(self, raster, lat, lon, cell_size):
+    def __init__(self, raster, lat, lon):
 
         assert isinstance(raster, np.ndarray), "raster is not a numpy array"
         assert isinstance(lat, np.ndarray), "lat is not a numpy array"
@@ -41,17 +41,28 @@ class ClipRaster:
         self.raster = raster
         self.lat = lat
         self.lon = lon
-        self.cell_size = cell_size
+        #self.cell_size = cell_size
         
         
         # dimensions along lat and lon
         if lat.ndim == 1:
     
             self.shape = (len(lat), len(lon))
+            
+            c1 = np.abs((lon[-1] - lon[0]) / (lon.shape[0]-1))
+            c2 = np.abs((lat[-1] - lat[0]) / (lat.shape[0]-1))
+            self.cell_size = min(c1, c2)
 
         if lat.ndim == 2:
     
             self.shape = (lat.shape[0], lat.shape[1])
+            
+            
+            c1 = np.abs((lon[-1, -1] - lon[0, 0]) / (lon.shape[1]-1))
+            c2 = np.abs((lat[-1, -1] - lat[0, 0]) / (lat.shape[0]-1))
+            self.cell_size = min(c1, c2)
+        
+        print(self.cell_size)
 
     def mask_shp(self, shp_path: str, crs=None, scale_factor=1):
         assert scale_factor >= 1, "scale_factor is less than one"
@@ -87,10 +98,11 @@ class ClipRaster:
             shp = shapefile.Reader(shp_path)
     
             # Get the polygon vertices of the basin
-            tupVerts = shp.shapes()[142].points
+            tupVerts = shp.shapes()[0].points
 
         if scale_factor == 1:
-
+            
+            
             # Create a mask for the shapefile
             mask = mask_with_vert_points(tupVerts, self.lat, self.lon)
             mask = mask.reshape(self.shape)
@@ -105,7 +117,6 @@ class ClipRaster:
             left = np.min(tupVerts_np[:, 0])
             right = np.max(tupVerts_np[:, 0])
             
-            print(left, right, up, down)
             
                 
             # Create new coordinates for the downscaled grid
@@ -472,7 +483,7 @@ def CalW2(mask, lat, lon, new_lat, new_lon, shape):
 
 
 def FTranspose(lon, lat):
-   
+        
     if lat.ndim == 1:
 
         x, y = np.meshgrid(lon, lat)
@@ -513,6 +524,6 @@ def mask_with_vert_points(tupVerts, lat, lon, mode='inpoly'):
 
     return isin
 
-def open_raster(raster, lat, lon, cell_size):
-    cr = ClipRaster(raster, lat, lon, cell_size)
+def open_raster(raster, lat, lon):
+    cr = ClipRaster(raster, lat, lon)
     return cr
