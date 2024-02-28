@@ -89,7 +89,7 @@ class ClipRaster:
             shp = gpd.read_file(shp_path)
             shp = shp.to_crs(crs)
             
-            tupVerts = shp.geometry[3].exterior.coords.xy
+            tupVerts = shp.geometry[0].exterior.coords.xy
             tupVerts = np.column_stack((tupVerts[0],tupVerts[1]))
             
         else:
@@ -98,7 +98,7 @@ class ClipRaster:
             shp = shapefile.Reader(shp_path)
     
             # Get the polygon vertices of the basin
-            tupVerts = shp.shapes()[3].points
+            tupVerts = shp.shapes()[0].points
 
 
         # Get the boundries of the basin

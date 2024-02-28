@@ -212,10 +212,10 @@ def mod_lat_lon(mod):
 
 
 
-shp_path = 'C:/Users/kgavahi/Desktop/test/Export_Output.shp'
+shp_path = r'C:\Users\kgavahi\Desktop\R\ET_679gages\dm.shp'
 
 
-da = xr.open_dataset('C:/Users/kgavahi/Desktop/test/daymet_v4_prcp_monttl_na_2010.nc')
+da = xr.open_dataset(r'C:\Users\kgavahi\Desktop\R\daymet_v4_prcp_monttl_na_2010.nc')
 daymet_crs = '+proj=lcc +lon_0=-100 +lat_0=42.5 +x_0=0 +y_0=0 +lat_1=25 +lat_2=60 +ellps=WGS84'
 
 data = np.zeros([10, 10])
@@ -243,22 +243,24 @@ print('cr time:', time.time()-sr)
 
 
 da = da.assign(landmask=(['y','x'], landmask))
-#da = da.assign(weights=(['y','x'], weights))
+da = da.assign(weights=(['y','x'], weights))
 
 
 
 da = da.where(da.landmask, drop=True)
 
-da_sum = da.mean(dim=('y', 'x')) 
+#da_sum = da.mean(dim=('y', 'x')) 
 #x, y = np.meshgrid(da.x, da.y)
 
 #da_w = da.tmax * da.weights
-#da_w = da.tmax * da.weights 
+da_w = da.prcp * da.weights 
 
-#da_sum = da_w.sum(dim=('y', 'x')) / (np.sum(da.weights))
+da_sum = da_w.sum(dim=('y', 'x')) / (np.sum(da.weights))
 print((time.time()-s)*679/3600, 'hr')
 
-da_w[0].plot()
+print(da_sum)
+
+#da_w[0].plot()
 
 plt.pause(.1)
 da_sum.plot()
