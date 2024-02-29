@@ -212,7 +212,7 @@ def mod_lat_lon(mod):
 
 
 
-shp_path = r'C:\Users\kgavahi\Desktop\R\ET_679gages\dm.shp'
+shp_path = r'C:\Users\kgavahi\Desktop\R\ET_679gages\s_lcc.shp'
 
 
 da = xr.open_dataset(r'C:\Users\kgavahi\Desktop\R\daymet_v4_prcp_monttl_na_2010.nc')
@@ -225,7 +225,7 @@ lat = np.array(da.y)
 lon = np.array(da.x)
 
 
-
+da = da.drop_vars('time_bnds')
 
 
 
@@ -236,9 +236,9 @@ r_da = cr.open_raster(data, lat, lon)
 
 s=time.time()
 sr = time.time()
-weights, landmask = r_da.mask_shp(shp_path, scale_factor=10)
+weights, landmask = r_da.mask_shp(shp_path, scale_factor=100)
 
-print('cr time:', time.time()-sr)
+print('cr time:', (time.time()-sr), 'sec')
 
 
 
@@ -253,22 +253,22 @@ da = da.where(da.landmask, drop=True)
 #x, y = np.meshgrid(da.x, da.y)
 
 #da_w = da.tmax * da.weights
-da_w = da.prcp * da.weights 
+da_w = da * da.weights 
 
 da_sum = da_w.sum(dim=('y', 'x')) / (np.sum(da.weights))
 print((time.time()-s)*679/3600, 'hr')
 
-print(da_sum)
+
 
 #da_w[0].plot()
 
 plt.pause(.1)
-da_sum.plot()
+da_sum.prcp.plot()
 
-df300 = da_sum.to_dataframe(name='my_data')
+df300 = da_sum.to_dataframe()
 
 
-
+x, y = np.meshgrid(da.x, da.y)
 
 
 
