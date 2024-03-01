@@ -212,10 +212,10 @@ def mod_lat_lon(mod):
 
 
 
-shp_path = r'C:\Users\kgavahi\Desktop\R\ET_679gages\s_lcc.shp'
+shp_path = 'C:/Users/kgavahi/Desktop/R/ET_679gages/s_lcc.shp'
 
 
-da = xr.open_dataset(r'C:\Users\kgavahi\Desktop\R\daymet_v4_prcp_monttl_na_2010.nc')
+da = xr.open_dataset("C:/Users/kgavahi/Desktop/R/daymet_v4_prcp_monttl_na_2010.nc")
 daymet_crs = '+proj=lcc +lon_0=-100 +lat_0=42.5 +x_0=0 +y_0=0 +lat_1=25 +lat_2=60 +ellps=WGS84'
 
 data = np.zeros([10, 10])
@@ -236,31 +236,32 @@ r_da = cr.open_raster(data, lat, lon)
 
 s=time.time()
 sr = time.time()
-weights, landmask = r_da.mask_shp(shp_path, scale_factor=100)
+weights, landmask = r_da.mask_shp(shp_path, weights = True, scale_factor=50)
 
 print('cr time:', (time.time()-sr), 'sec')
 
 
-
+sr = time.time()
 da = da.assign(landmask=(['y','x'], landmask))
-da = da.assign(weights=(['y','x'], weights))
+#da = da.assign(weights=(['y','x'], weights))
+print('assign:', (time.time()-sr), 'sec')
 
-
-
+sr = time.time()
 da = da.where(da.landmask, drop=True)
-
-#da_sum = da.mean(dim=('y', 'x')) 
-#x, y = np.meshgrid(da.x, da.y)
-
-#da_w = da.tmax * da.weights
-da_w = da * da.weights 
-
-da_sum = da_w.sum(dim=('y', 'x')) / (np.sum(da.weights))
-print((time.time()-s)*679/3600, 'hr')
+print('da.where:', (time.time()-sr), 'sec')
 
 
+sr = time.time()
+da_w = da * weights 
 
-#da_w[0].plot()
+#da_sum = da_w.sum(dim=('y', 'x')) / (np.sum(weights))
+da_sum = da_w.sum(dim=('y', 'x'))
+print('da_w da_sum:', (time.time()-sr), 'sec')
+print('total:', (time.time()-s), 'sec')
+
+
+
+da.prcp[0].plot()
 
 plt.pause(.1)
 da_sum.prcp.plot()
@@ -268,9 +269,16 @@ da_sum.prcp.plot()
 df300 = da_sum.to_dataframe()
 
 
-x, y = np.meshgrid(da.x, da.y)
+Rres = np.genfromtxt('C:/Users/kgavahi/Desktop/R/first_row_nw.txt',
+                   delimiter = ' ')
 
+plt.pause(.1)
+c = 20
+plt.plot(Rres[2, 1:c])
+plt.plot(da_sum.prcp[:c-1])
 
+nrmse = np.sqrt(np.mean(da_sum.prcp - Rres[2, 1:])**2)/ np.mean(Rres[0, 1:]) * 100
+print(nrmse, '%')
 
 aa
   

@@ -64,7 +64,7 @@ class ClipRaster:
             self.cell_size = min(c1, c2)
         
 
-    def mask_shp(self, shp_path: str, crs=None, scale_factor=1):
+    def mask_shp(self, shp_path: str, crs=None, weights = False, scale_factor=10):
         assert scale_factor >= 1, "scale_factor is less than one"
         """
         
@@ -98,7 +98,7 @@ class ClipRaster:
             shp = shapefile.Reader(shp_path)
     
             # Get the polygon vertices of the basin
-            tupVerts = shp.shapes()[0].points
+            tupVerts = shp.shapes()[2].points
 
 
 
@@ -108,7 +108,7 @@ class ClipRaster:
 
 
 
-        if scale_factor == 1:
+        if not weights:
             
             
             # Create a mask for the shapefile
@@ -116,7 +116,10 @@ class ClipRaster:
             mask = mask.reshape(self.shape)
 
             
-            weights = mask / np.sum(mask)
+            weights = mask * 1
+
+            weights = weights[:, np.any(mask, axis=0)]
+            weights = weights[np.any(mask, axis=1), :]
 
         else:
 
@@ -135,6 +138,7 @@ class ClipRaster:
             
             
             ############
+            s1 = time.time()
             x, y = np.meshgrid(self.lon, self.lat)
             
             msk = (x>left) & (x<right) & (y>down) & (y<up)
@@ -145,6 +149,8 @@ class ClipRaster:
             
             y = y[:, np.any(msk, axis=0)]
             y = y[np.any(msk, axis=1), :]
+            
+            el = time.time() - s1
             
             s = time.time()
             mask_new = mask_with_vert_points(tupVerts, new_lat, new_lon)
@@ -158,6 +164,7 @@ class ClipRaster:
             print('CalW6', time.time()-s)
             
             #print(w)
+            s2 = time.time()
             weights = np.zeros(self.shape)
             
             weights[msk] = w.flatten()
@@ -165,7 +172,13 @@ class ClipRaster:
             #print(weights[msk])
             
             mask = weights > 0
+            el+=(time.time() - s2)
             
+            print('el', el)
+
+
+            weights = weights[:, np.any(mask, axis=0)]
+            weights = weights[np.any(mask, axis=1), :]
             
             
             '''
@@ -199,6 +212,8 @@ class ClipRaster:
             #                       self.lat, self.lon, new_lat, new_lon)
             
 
+        if np.sum(mask)==0:
+            raise ValueError("Weights is empty. Try increasing 'scale_factor' by scale_factor=100")
 
 
         return weights, mask
@@ -637,7 +652,7 @@ def mask_with_vert_points(tupVerts, lat, lon, mode='inpoly'):
 
         #mask = isin.reshape(x.shape[0], x.shape[1])
         
-        np.savetxt('points.csv', points, delimiter=',')
+        #np.savetxt('points.csv', points, delimiter=',')
 
     return isin
 
