@@ -23,6 +23,8 @@ import requests
 import pygrib
 from inpoly import inpoly2
 
+import geopandas as gpd
+
 def mask_with_vert_points(tupVerts, lat, lon, mode='inpoly'):
 
 
@@ -139,6 +141,63 @@ def mod_lat_lon(mod):
 
 
 
+da = xr.open_mfdataset(
+    'snodas/*',
+    concat_dim="time",
+    combine="nested",
+)
+
+
+shp_path = 'C:/Users/kgavahi/Desktop/R/ET_679gages/s_lcc.shp'
+
+
+lat = np.array(da.lat)
+lon = np.array(da.lon)
+data = np.zeros([10, 10])
+
+import clipraster as cr
+r_da = cr.open_raster(data, lat, lon)
+
+s=time.time()
+sr = time.time()
+weights, landmask = r_da.mask_shp(shp_path, weights = True, scale_factor=10, crs = da.crs.spatial_ref)
+print('cr time:', (time.time()-sr), 'sec')
+
+
+da = da.drop_vars('crs')
+
+sr = time.time()
+da = da.assign(landmask=(['lat','lon'], landmask))
+#da = da.assign(weights=(['y','x'], weights))
+print('assign:', (time.time()-sr), 'sec')
+
+sr = time.time()
+da = da.where(da.landmask, drop=True)
+print('da.where:', (time.time()-sr), 'sec')
+
+
+
+sr = time.time()
+da_w = da * weights 
+
+#da_sum = da_w.sum(dim=('y', 'x')) / (np.sum(weights))
+da_sum = da_w.sum(dim=('lat', 'lon'))
+print('da_w da_sum:', (time.time()-sr), 'sec')
+print('total:', (time.time()-s), 'sec')
+
+
+
+da.Band1[0].plot()
+
+plt.pause(.1)
+da_sum.Band1.plot()
+
+aa
+
+
+
+
+
 # nldas = xr.open_dataset('NLDAS_FORA0125_H.A20000101.0000.002.grb.SUB.nc4', engine='netcdf4')
 # data = np.array(nldas.to_array())
 # lat = np.array(nldas.lat)
@@ -211,9 +270,16 @@ def mod_lat_lon(mod):
 # print(np.all(isin==isin2))
 
 
-
 shp_path = 'C:/Users/kgavahi/Desktop/R/ET_679gages/s_lcc.shp'
+crs = 'GEOGCS["unknown",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AXIS["Longitude",EAST],AXIS["Latitude",NORTH]]'
 
+shp = gpd.read_file(shp_path)
+#shp = shp.to_crs(crs)
+
+tupVerts = shp.geometry[0].exterior.coords.xy
+tupVerts = np.column_stack((tupVerts[0],tupVerts[1]))
+
+aa
 
 da = xr.open_dataset("C:/Users/kgavahi/Desktop/R/daymet_v4_prcp_monttl_na_2010.nc")
 daymet_crs = '+proj=lcc +lon_0=-100 +lat_0=42.5 +x_0=0 +y_0=0 +lat_1=25 +lat_2=60 +ellps=WGS84'
