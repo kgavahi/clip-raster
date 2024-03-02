@@ -148,7 +148,7 @@ da = xr.open_mfdataset(
 )
 
 
-shp_path = 'C:/Users/kgavahi/Desktop/R/ET_679gages/s_lcc.shp'
+shp_path = 'C:/Users/kgavahi/Desktop/R/ET_679gages/hysets_basin_shapes.shp'
 
 
 lat = np.array(da.lat)
@@ -191,6 +191,9 @@ da.Band1[0].plot()
 
 plt.pause(.1)
 da_sum.Band1.plot()
+
+
+df300 = da_sum.Band1.to_dataframe()
 
 aa
 
