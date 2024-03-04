@@ -142,19 +142,23 @@ def mod_lat_lon(mod):
 
 import glob
 
-import glob
 
 addr = glob.glob('snodas/us_ssmv11034tS__T0001TTNATS2003*05HP001.nc') + \
     glob.glob('snodas/us_ssmv11034tS__T0001TTNATS2005*05HP001.nc')
 
 
 da = xr.open_mfdataset(
-    addr,
+    'snodas/*',
     concat_dim="time",
     combine="nested",
 )
-print(da)
-aa
+
+
+da = xr.open_dataset('snodas/us_ssmv11034tS__T0001TTNATS2003100105HP001.nc')
+
+#da = xr.open_dataset('snodas/us_ssmv11034tS__T0001TTNATS2020042305HP001.nc')
+
+
 
 shp_path = 'C:/Users/kgavahi/Desktop/R/ET_679gages/hysets_basin_shapes.shp'
 
@@ -195,7 +199,7 @@ print('total:', (time.time()-s), 'sec')
 
 
 
-da.Band1[0].plot()
+da.Band1.plot()
 
 plt.pause(.1)
 da_sum.Band1.plot()
