@@ -156,7 +156,7 @@ da = xr.open_mfdataset(
 
 da = xr.open_dataset('snodas/us_ssmv11034tS__T0001TTNATS2003100105HP001.nc')
 
-#da = xr.open_dataset('snodas/us_ssmv11034tS__T0001TTNATS2020042305HP001.nc')
+da = xr.open_dataset('snodas/us_ssmv11034tS__T0001TTNATS2016071205HP001.nc')
 
 
 
