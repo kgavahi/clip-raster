@@ -140,13 +140,21 @@ def mod_lat_lon(mod):
     return lat, lon
 
 
+import glob
+
+import glob
+
+addr = glob.glob('snodas/us_ssmv11034tS__T0001TTNATS2003*05HP001.nc') + \
+    glob.glob('snodas/us_ssmv11034tS__T0001TTNATS2005*05HP001.nc')
+
 
 da = xr.open_mfdataset(
-    'snodas/*',
+    addr,
     concat_dim="time",
     combine="nested",
 )
-
+print(da)
+aa
 
 shp_path = 'C:/Users/kgavahi/Desktop/R/ET_679gages/hysets_basin_shapes.shp'
 
