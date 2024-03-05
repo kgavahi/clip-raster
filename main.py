@@ -165,7 +165,7 @@ shp_path = 'C:/Users/kgavahi/Desktop/R/ET_679gages/hysets_basin_shapes.shp'
 
 lat = np.array(da.lat)
 lon = np.array(da.lon)
-data = np.zeros([10, 10])
+#data = np.zeros([10, 10])
 
 import clipraster as cr
 r_da = cr.open_raster(data, lat, lon)
