@@ -310,7 +310,7 @@ class DataPreprocess:
     def dl_modis(self, path=None, product=None,
                  start_date=None, end_date=None, tiles=None):            
         
-        assert isinstance(tiles, list), 'tiles must be a list'
+        #assert isinstance(tiles, list), 'tiles must be a list'
         
         if tiles=='conus':
             # 14 tiles that cover the CONUS
@@ -340,7 +340,7 @@ class DataPreprocess:
         date_str = [str(date)[:10].replace('-', '') for date in date_range]
 
         page_url = f'https://e4ftl01.cr.usgs.gov/{satellite}/{product}/'
-        
+
         uf = urllib.request.urlopen(page_url, timeout=120)
         html = uf.read()
         soup = BeautifulSoup(html, "html.parser")
@@ -463,426 +463,426 @@ def get_next_link(prdt_page):
 
 
 
-# chirps = xr.open_dataset('chirps/CMORPH_V1.0_ADJ_0.25deg-DLY_00Z_20190101.nc')
-# print(chirps)
+# # chirps = xr.open_dataset('chirps/CMORPH_V1.0_ADJ_0.25deg-DLY_00Z_20190101.nc')
+# # print(chirps)
 
-# import matplotlib.pyplot as plt
-# from mpl_toolkits.basemap import Basemap
-# m = Basemap(projection='cyl', resolution='l',
-#             llcrnrlat=-90, urcrnrlat =90,
-#             llcrnrlon=-180, urcrnrlon =180) 
+# # import matplotlib.pyplot as plt
+# # from mpl_toolkits.basemap import Basemap
+# # m = Basemap(projection='cyl', resolution='l',
+# #             llcrnrlat=-90, urcrnrlat =90,
+# #             llcrnrlon=-180, urcrnrlon =180) 
 
-# m.drawcoastlines(linewidth=0.5)
-# pcolormesh = m.pcolormesh(chirps.lon, chirps.lat,
-#                           chirps.cmorph[0], 
-#                           latlon=True, cmap='gist_ncar_r', vmin=0, vmax=15)
-# m.drawcoastlines(linewidth=0.5)
-# m.drawparallels(np.arange(-90, 90, 60),
-#                 labels=[1, 0, 0, 0])
-# m.drawmeridians(np.arange(-180, 180, 60),
-#                 labels=[0, 0, 0, 1])
+# # m.drawcoastlines(linewidth=0.5)
+# # pcolormesh = m.pcolormesh(chirps.lon, chirps.lat,
+# #                           chirps.cmorph[0], 
+# #                           latlon=True, cmap='gist_ncar_r', vmin=0, vmax=15)
+# # m.drawcoastlines(linewidth=0.5)
+# # m.drawparallels(np.arange(-90, 90, 60),
+# #                 labels=[1, 0, 0, 0])
+# # m.drawmeridians(np.arange(-180, 180, 60),
+# #                 labels=[0, 0, 0, 1])
 
-# plt.title('CMORPH')
-# fig = plt.gcf()
+# # plt.title('CMORPH')
+# # fig = plt.gcf()
 
-# fig.colorbar(pcolormesh)
+# # fig.colorbar(pcolormesh)
 
-# import matplotlib.pyplot as plt
+# # import matplotlib.pyplot as plt
 
-# da1 = xr.open_dataset('2010010100.LDASIN_DOMAIN12')
-# swdown = np.array(da1.SWDOWN)
-# swdown = np.where(swdown<0, np.nan, swdown)
-# plt.pcolormesh(swdown[0, :, :])
+# # da1 = xr.open_dataset('2010010100.LDASIN_DOMAIN12')
+# # swdown = np.array(da1.SWDOWN)
+# # swdown = np.where(swdown<0, np.nan, swdown)
+# # plt.pcolormesh(swdown[0, :, :])
 
-# fig = plt.gcf()
+# # fig = plt.gcf()
 
-# plt.colorbar()
+# # plt.colorbar()
 
 
 
-da1 = xr.open_dataset('daymet_v4_tmin_annavg_na_1983.nc')
+# da1 = xr.open_dataset('daymet_v4_tmin_annavg_na_1983.nc')
 
-da1.tmin.plot()
+# da1.tmin.plot()
 
-aa
-dp = DataPreprocess(user='kgavahi', password='491Newyork')
-dp.dl_persiann(path='chirps',
-            start_date='2023101', end_date='20201112',
-            )
+# aa
+# dp = DataPreprocess(user='kgavahi', password='491Newyork')
+# dp.dl_persiann(path='chirps',
+#             start_date='2023101', end_date='20201112',
+#             )
   
 
-aa
+# aa
 
 
 
-da1 = xr.open_dataset('chirps/CDR_2022-04-17030747pm_2000.nc')
-da2 = xr.open_dataset('chirps/PERSIANN-CDR_v01r01_20000101_c20140523.nc')
+# da1 = xr.open_dataset('chirps/CDR_2022-04-17030747pm_2000.nc')
+# da2 = xr.open_dataset('chirps/PERSIANN-CDR_v01r01_20000101_c20140523.nc')
 
 
-da2 = da2.assign_coords(lon=(((da2.lon + 180) % 360) - 180))
-print(da1.precip[0])
-print('--------------')
-print(da2.precipitation)
+# da2 = da2.assign_coords(lon=(((da2.lon + 180) % 360) - 180))
+# print(da1.precip[0])
+# print('--------------')
+# print(da2.precipitation)
 
 
-lat_daymet = da2.lat
-lon_daymet = da2.lon
-data = da2.precipitation[0]
+# lat_daymet = da2.lat
+# lon_daymet = da2.lon
+# data = da2.precipitation[0]
 
 
-from mpl_toolkits.basemap import Basemap
-m = Basemap(projection='cyl', resolution='l',
-            llcrnrlat=lat_daymet.min(), urcrnrlat =lat_daymet.max(),
-            llcrnrlon=lon_daymet.min(), urcrnrlon =lon_daymet.max()) 
+# from mpl_toolkits.basemap import Basemap
+# m = Basemap(projection='cyl', resolution='l',
+#             llcrnrlat=lat_daymet.min(), urcrnrlat =lat_daymet.max(),
+#             llcrnrlon=lon_daymet.min(), urcrnrlon =lon_daymet.max()) 
 
 
-pcolormesh = m.pcolormesh(lon_daymet, lat_daymet,
-                          data.T, 
-                          latlon=True, cmap='jet', vmin=0)
+# pcolormesh = m.pcolormesh(lon_daymet, lat_daymet,
+#                           data.T, 
+#                           latlon=True, cmap='jet', vmin=0)
 
-import matplotlib.pyplot as plt
-fig = plt.gcf()
+# import matplotlib.pyplot as plt
+# fig = plt.gcf()
 
-fig.colorbar(pcolormesh)  
-# dp = DataPreprocess(user='kgavahi', password='491Newyork')
-# dp.dl_gldas(path='chirps',
-#             start_date='20210101', end_date='20210102',
-#             )               
-
-
-
-aa
+# fig.colorbar(pcolormesh)  
+# # dp = DataPreprocess(user='kgavahi', password='491Newyork')
+# # dp.dl_gldas(path='chirps',
+# #             start_date='20210101', end_date='20210102',
+# #             )               
 
 
-# dp = DataPreprocess(user='kgavahi', password='491Newyork')
-# dp.dl_gldas(path='chirps',
-#             start_date='19990101', end_date='20210102',
-#             )
+
+# aa
+
+
+# # dp = DataPreprocess(user='kgavahi', password='491Newyork')
+# # dp.dl_gldas(path='chirps',
+# #             start_date='19990101', end_date='20210102',
+# #             )
         
 
-# dp = DataPreprocess(user='kgavahi', password='491Newyork')
-# dp.dl_modis(path='chirps', product='MYD14.061', 
-#             start_date='20210101', end_date='20210117',
-#             tiles='conus')
+# # dp = DataPreprocess(user='kgavahi', password='491Newyork')
+# # dp.dl_modis(path='chirps', product='MYD14.061', 
+# #             start_date='20210101', end_date='20210117',
+# #             tiles='conus')
 
-uf = urllib.request.urlopen('https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/', timeout=20)
-html = uf.read()        
-soup = BeautifulSoup(html, 'html.parser')        
-all_prdts = [prdt.get('href') for prdt in soup.find_all('a', href=True)[6:-4]]
-all_prdts = set(all_prdts)
-all_prdts = sorted(all_prdts)
-print(len(all_prdts))
-c=1
-S=time.time()
-sl = 300
-for prdt in all_prdts:
-    #prdt = prdt.get('href')
-    #print(prdt)
-    time.sleep(sl)
+# uf = urllib.request.urlopen('https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/', timeout=20)
+# html = uf.read()        
+# soup = BeautifulSoup(html, 'html.parser')        
+# all_prdts = [prdt.get('href') for prdt in soup.find_all('a', href=True)[6:-4]]
+# all_prdts = set(all_prdts)
+# all_prdts = sorted(all_prdts)
+# print(len(all_prdts))
+# c=1
+# S=time.time()
+# sl = 300
+# for prdt in all_prdts:
+#     #prdt = prdt.get('href')
+#     #print(prdt)
+#     time.sleep(sl)
 
-    #prdt = 'GPM_3GPROFF16SSMIS_DAY_CLIM.07'
-    if prdt == 'GPM_3GPROFF19SSMIS.07/': continue
-    if prdt == 'GPM_3GPROFF19SSMIS_DAY.07/': continue
-    if prdt == 'GPM_3GPROFMETOPAMHS.07/': continue
-    if prdt == 'GPM_3GPROFMETOPAMHS_DAY.07/': continue
-    if prdt == 'GPM_3GPROFNOAA18MHS.07/': continue
-    if prdt == 'GPM_3GPROFNOAA18MHS_DAY.07/': continue
-    print(f'----------------{c}---{prdt}------start-----------------------------')
-    s=time.time()
-    dp = DataPreprocess(user='kgavahi', password='491Newyork')
-    dp.dl_gpmL3(path='chirps', product=prdt, 
-                start_date='19000101', end_date='20240101')
-    print('time:', time.time()-s)
-    print('total time:', time.time()-S-sl*c)
-    print(f'----------------{c}---{prdt}------finished-----------------------------')
-    c+=1
+#     #prdt = 'GPM_3GPROFF16SSMIS_DAY_CLIM.07'
+#     if prdt == 'GPM_3GPROFF19SSMIS.07/': continue
+#     if prdt == 'GPM_3GPROFF19SSMIS_DAY.07/': continue
+#     if prdt == 'GPM_3GPROFMETOPAMHS.07/': continue
+#     if prdt == 'GPM_3GPROFMETOPAMHS_DAY.07/': continue
+#     if prdt == 'GPM_3GPROFNOAA18MHS.07/': continue
+#     if prdt == 'GPM_3GPROFNOAA18MHS_DAY.07/': continue
+#     print(f'----------------{c}---{prdt}------start-----------------------------')
+#     s=time.time()
+#     dp = DataPreprocess(user='kgavahi', password='491Newyork')
+#     dp.dl_gpmL3(path='chirps', product=prdt, 
+#                 start_date='19000101', end_date='20240101')
+#     print('time:', time.time()-s)
+#     print('total time:', time.time()-S-sl*c)
+#     print(f'----------------{c}---{prdt}------finished-----------------------------')
+#     c+=1
     
-aa
+# aa
 
-da = xr.open_mfdataset('chirps/3B-DAY.*.V07.nc4')
-da = da.precipitation
-#datetimeindex = da.indexes['time'].to_datetimeindex()
-#da['time'] = datetimeindex
-import glob
-
-
-#########################
-s=time.time()
-selected_columns = ['STATION', 'DATE', 'LATITUDE', 'LONGITUDE', 'PRCP']
-df = pd.concat((pd.read_csv(file, usecols=selected_columns) 
-                for file in glob.glob('st/*.csv')), 
-                ignore_index=True)
-print(time.time()-s)
-#############################
+# da = xr.open_mfdataset('chirps/3B-DAY.*.V07.nc4')
+# da = da.precipitation
+# #datetimeindex = da.indexes['time'].to_datetimeindex()
+# #da['time'] = datetimeindex
+# import glob
 
 
-
-
-df['DATE'] = pd.to_datetime(df['DATE'])
-df = df[(df['DATE'] >= '2000-01-01') & (df['DATE'] <= '2002-01-01')]
-
-
-
-df_dd = df.drop_duplicates(subset=['STATION'])
-
-
-
-lat_st = df_dd.LATITUDE
-lon_st = df_dd.LONGITUDE
-stations = df_dd.STATION
+# #########################
+# s=time.time()
+# selected_columns = ['STATION', 'DATE', 'LATITUDE', 'LONGITUDE', 'PRCP']
+# df = pd.concat((pd.read_csv(file, usecols=selected_columns) 
+#                 for file in glob.glob('st/*.csv')), 
+#                 ignore_index=True)
+# print(time.time()-s)
+# #############################
 
 
 
 
-tgt_lat = xr.DataArray(lat_st, dims="STATION", coords=dict(STATION=stations))
-tgt_lon = xr.DataArray(lon_st, dims="STATION", coords=dict(STATION=stations))
-da = da.sel(lon=tgt_lon, lat=tgt_lat, method="nearest")
-df_imerg = da.to_dataframe()
-df_imerg = df_imerg.reset_index().rename(columns={"time":"DATE"})
+# df['DATE'] = pd.to_datetime(df['DATE'])
+# df = df[(df['DATE'] >= '2000-01-01') & (df['DATE'] <= '2002-01-01')]
+
+
+
+# df_dd = df.drop_duplicates(subset=['STATION'])
+
+
+
+# lat_st = df_dd.LATITUDE
+# lon_st = df_dd.LONGITUDE
+# stations = df_dd.STATION
+
+
+
+
+# tgt_lat = xr.DataArray(lat_st, dims="STATION", coords=dict(STATION=stations))
+# tgt_lon = xr.DataArray(lon_st, dims="STATION", coords=dict(STATION=stations))
+# da = da.sel(lon=tgt_lon, lat=tgt_lat, method="nearest")
+# df_imerg = da.to_dataframe()
+# df_imerg = df_imerg.reset_index().rename(columns={"time":"DATE"})
 
 
 
 
 
-df2 = df.merge(df_imerg, on=['DATE', 'STATION'], how='outer')
+# df2 = df.merge(df_imerg, on=['DATE', 'STATION'], how='outer')
 
-print(df2)
+# print(df2)
  
-aa
+# aa
 
-import dask.dataframe as dd
-df = dd.read_csv('st/*.csv', assume_missing=True)
-print(df.groupby('LATITUDE').PRCP.mean().compute())
+# import dask.dataframe as dd
+# df = dd.read_csv('st/*.csv', assume_missing=True)
+# print(df.groupby('LATITUDE').PRCP.mean().compute())
 
 
-df.to_parquet('st/test.parquet', engine='pyarrow')
+# df.to_parquet('st/test.parquet', engine='pyarrow')
 
-aa
+# aa
+
+# # files = os.listdir('st')
+# # files = sorted(files)
+# # s = time.time()
+# # for file in files:
+# #     df = pd.read_csv(f'st/{file}')
+# #     df['DATE'] = pd.to_datetime(df['DATE'])
+# #     lat_st = df.LATITUDE[0]
+# #     lon_st = df.LONGITUDE[0]
+    
+# #     da_st = da.sel(lon=lon_st, lat=lat_st, method="nearest")
+    
+# #     df_imerg = da_st.to_dataframe().reset_index().rename(columns={"time":"DATE"})
+    
+# #     print(df_imerg)
+    
+# #     df = df.merge(df_imerg, on='DATE', how='outer')
+    
+# #     df.to_csv('test.csv')
+# #  print(time.time()-s)   
+
 
 # files = os.listdir('st')
 # files = sorted(files)
+# lat_st = []
+# lon_st = []
 # s = time.time()
 # for file in files:
 #     df = pd.read_csv(f'st/{file}')
 #     df['DATE'] = pd.to_datetime(df['DATE'])
-#     lat_st = df.LATITUDE[0]
-#     lon_st = df.LONGITUDE[0]
-    
-#     da_st = da.sel(lon=lon_st, lat=lat_st, method="nearest")
-    
-#     df_imerg = da_st.to_dataframe().reset_index().rename(columns={"time":"DATE"})
-    
-#     print(df_imerg)
-    
-#     df = df.merge(df_imerg, on='DATE', how='outer')
-    
-#     df.to_csv('test.csv')
-#  print(time.time()-s)   
-
-
-files = os.listdir('st')
-files = sorted(files)
-lat_st = []
-lon_st = []
-s = time.time()
-for file in files:
-    df = pd.read_csv(f'st/{file}')
-    df['DATE'] = pd.to_datetime(df['DATE'])
-    lat_st.append(df.LATITUDE[0])
-    lon_st.append(df.LONGITUDE[0])
+#     lat_st.append(df.LATITUDE[0])
+#     lon_st.append(df.LONGITUDE[0])
    
 
     
-tgt_lat = xr.DataArray(lat_st, dims="points")
-tgt_lon = xr.DataArray(lon_st, dims="points")
-da = da.sel(lon=tgt_lon, lat=tgt_lat, method="nearest")
-df_imerg = da.to_dataframe()
+# tgt_lat = xr.DataArray(lat_st, dims="points")
+# tgt_lon = xr.DataArray(lon_st, dims="points")
+# da = da.sel(lon=tgt_lon, lat=tgt_lat, method="nearest")
+# df_imerg = da.to_dataframe()
 
 
 
 
-s = time.time()
-for i, file in enumerate(files):
-    df = pd.read_csv(f'st/{file}')
-    df['DATE'] = pd.to_datetime(df['DATE'])
+# s = time.time()
+# for i, file in enumerate(files):
+#     df = pd.read_csv(f'st/{file}')
+#     df['DATE'] = pd.to_datetime(df['DATE'])
     
-    #df_imerg_st = df_imerg.loc[df_imerg.index.get_level_values('points') == i]
-    #df_imerg_st = df_imerg_st.reset_index().rename(columns={"time":"DATE"})
+#     #df_imerg_st = df_imerg.loc[df_imerg.index.get_level_values('points') == i]
+#     #df_imerg_st = df_imerg_st.reset_index().rename(columns={"time":"DATE"})
     
-    #df = df.merge(df_imerg_st, on='DATE', how='outer')
+#     #df = df.merge(df_imerg_st, on='DATE', how='outer')
     
-    #df.to_csv('test.csv')
+#     #df.to_csv('test.csv')
 
 
 
 
-print(time.time()-s) 
+# print(time.time()-s) 
 
 
-# tgt_x = xr.DataArray(np.linspace(0, 4, num=10), dims="points")
-# tgt_y = xr.DataArray(np.linspace(0, 4, num=10), dims="points")
-# da = da.sel(lon=tgt_x, lat=tgt_y, method="nearest")
+# # tgt_x = xr.DataArray(np.linspace(0, 4, num=10), dims="points")
+# # tgt_y = xr.DataArray(np.linspace(0, 4, num=10), dims="points")
+# # da = da.sel(lon=tgt_x, lat=tgt_y, method="nearest")
 
-# print(da.precipitation.to_dataframe())
+# # print(da.precipitation.to_dataframe())
     
 
-aa
+# aa
 
-page_url = 'https://e4ftl01.cr.usgs.gov/MOTA/MCD43A1.061/'
-uf = urllib.request.urlopen(page_url, timeout=20)
-html = uf.read()
-soup = BeautifulSoup(html, "html.parser")
-link_list = set([link.get('href') for link in soup.find_all('a')])
+# page_url = 'https://e4ftl01.cr.usgs.gov/MOTA/MCD43A1.061/'
+# uf = urllib.request.urlopen(page_url, timeout=20)
+# html = uf.read()
+# soup = BeautifulSoup(html, "html.parser")
+# link_list = set([link.get('href') for link in soup.find_all('a')])
 
-filtered_links = [link for link in link_list if 
-                  datetime.strptime(link[:-1], '%Y.%m.%d')]
-
-
-aa
-chirps = xr.open_dataset('chirps/chirps-v2.0.2023.04.days_p05.nc')
-
-daymet = xr.open_dataset('daymet_v4_daily_na_tmax_2011.nc')
-
-import numpy as np
+# filtered_links = [link for link in link_list if 
+#                   datetime.strptime(link[:-1], '%Y.%m.%d')]
 
 
+# aa
+# chirps = xr.open_dataset('chirps/chirps-v2.0.2023.04.days_p05.nc')
+
+# daymet = xr.open_dataset('daymet_v4_daily_na_tmax_2011.nc')
+
+# import numpy as np
 
 
-# up= 785366.110912
-# down=767749.595638
-# right=-1094376.75696
-# left=-1119311.59835
 
-up= 1407298.913147
-down=-1503823.977287
-right=2258121.111016
-left=-2361365.578107
 
-# up= 805366.110912
-# down=707749.595638
-# right=-914376.75696
-# left=-1019311.59835
+# # up= 785366.110912
+# # down=767749.595638
+# # right=-1094376.75696
+# # left=-1119311.59835
 
-daymet = daymet.isel(x=(daymet.x >= left) & (daymet.x <= right),
-                          y=(daymet.y >= down) & (daymet.y <= up),
-                          )
+# up= 1407298.913147
+# down=-1503823.977287
+# right=2258121.111016
+# left=-2361365.578107
 
-# daymet = daymet.coarsen(x=5, boundary='pad').mean()\
-#         .coarsen(y=5, boundary='pad').mean()
+# # up= 805366.110912
+# # down=707749.595638
+# # right=-914376.75696
+# # left=-1019311.59835
 
-lat_daymet = np.array(daymet.lat)
-lon_daymet = np.array(daymet.lon)
+# daymet = daymet.isel(x=(daymet.x >= left) & (daymet.x <= right),
+#                           y=(daymet.y >= down) & (daymet.y <= up),
+#                           )
 
-up= lat_daymet.max()
-down=lat_daymet.min()
-right=lon_daymet.max()
-left=lon_daymet.min()
+# # daymet = daymet.coarsen(x=5, boundary='pad').mean()\
+# #         .coarsen(y=5, boundary='pad').mean()
 
-chirps = chirps.isel(longitude=(chirps.longitude >= left) & (chirps.longitude <= right),
-                          latitude=(chirps.latitude >= down) & (chirps.latitude <= up),
-                          )
+# lat_daymet = np.array(daymet.lat)
+# lon_daymet = np.array(daymet.lon)
 
-def FTranspose(lon, lat):
+# up= lat_daymet.max()
+# down=lat_daymet.min()
+# right=lon_daymet.max()
+# left=lon_daymet.min()
+
+# chirps = chirps.isel(longitude=(chirps.longitude >= left) & (chirps.longitude <= right),
+#                           latitude=(chirps.latitude >= down) & (chirps.latitude <= up),
+#                           )
+
+# def FTranspose(lon, lat):
    
-    if lat.ndim == 1:
+#     if lat.ndim == 1:
 
-        x, y = np.meshgrid(lon, lat)
+#         x, y = np.meshgrid(lon, lat)
 
-    if lat.ndim == 2:
-        x = lon
-        y = lat
+#     if lat.ndim == 2:
+#         x = lon
+#         y = lat
         
-    xf, yf = x.flatten(), y.flatten()
+#     xf, yf = x.flatten(), y.flatten()
 
-    # TODO here can be more optimization
-    #points = np.vstack((xf,yf)).T
-    #points = np.transpose((xf, yf))
-    points = np.column_stack((xf,yf))    
+#     # TODO here can be more optimization
+#     #points = np.vstack((xf,yf)).T
+#     #points = np.transpose((xf, yf))
+#     points = np.column_stack((xf,yf))    
     
-    return points
-s = time.time()
-points = FTranspose(lon_daymet, lat_daymet)
+#     return points
+# s = time.time()
+# points = FTranspose(lon_daymet, lat_daymet)
 
-points_product = FTranspose(chirps.longitude, chirps.latitude)
-
-
-kdtree = KDTree(points_product)
-d, arg_dd = kdtree.query(points)
+# points_product = FTranspose(chirps.longitude, chirps.latitude)
 
 
-daymet_f = np.array(daymet.tmax[0]).flatten()
-chirps_f = np.array(chirps.precip[0]).flatten()
-
-# daymet_coarse = np.empty(len(chirps_f))
-
-for i in range(len(chirps_f)):
-    print(i, len(chirps_f))
-    daymet_coarse[i] = np.nanmean(daymet_f[np.where(arg_dd==i)])
-daymet_coarse = daymet_coarse.reshape(chirps.precip[0].shape)
+# kdtree = KDTree(points_product)
+# d, arg_dd = kdtree.query(points)
 
 
-##########
+# daymet_f = np.array(daymet.tmax[0]).flatten()
+# chirps_f = np.array(chirps.precip[0]).flatten()
+
+# # daymet_coarse = np.empty(len(chirps_f))
+
+# for i in range(len(chirps_f)):
+#     print(i, len(chirps_f))
+#     daymet_coarse[i] = np.nanmean(daymet_f[np.where(arg_dd==i)])
+# daymet_coarse = daymet_coarse.reshape(chirps.precip[0].shape)
 
 
-
-
-df1 = np.column_stack((arg_dd, daymet_f))
-df2 = pd.DataFrame(df1, columns=['group', 'daymet'])
-df3 = df2.groupby('group').mean().reindex(np.arange(len(chirps_f)))
-daymet_coarse = np.array(df3).reshape(chirps.precip[0].shape)
-print(time.time() - s)
-##############
-from scipy.interpolate import griddata
-
-vs = np.moveaxis(daymet.tmax[:20].values, 0, -1).reshape(4620*2911, 20)
-
-s = time.time()
-daymet_coarse = griddata(
-    #values=daymet.tmax[0].values.ravel(),
-    values=vs,
-    points=np.stack((daymet['lon'], daymet['lat']), axis=-1).reshape((-1, 2)),
-    xi=np.stack(np.meshgrid(chirps.longitude, chirps.latitude), axis=-1).reshape((-1, 2)),
-method='linear').reshape(493, 1412, 20)
-print(time.time() - s)
+# ##########
 
 
 
 
+# df1 = np.column_stack((arg_dd, daymet_f))
+# df2 = pd.DataFrame(df1, columns=['group', 'daymet'])
+# df3 = df2.groupby('group').mean().reindex(np.arange(len(chirps_f)))
+# daymet_coarse = np.array(df3).reshape(chirps.precip[0].shape)
+# print(time.time() - s)
+# ##############
+# from scipy.interpolate import griddata
+
+# vs = np.moveaxis(daymet.tmax[:20].values, 0, -1).reshape(4620*2911, 20)
+
+# s = time.time()
+# daymet_coarse = griddata(
+#     #values=daymet.tmax[0].values.ravel(),
+#     values=vs,
+#     points=np.stack((daymet['lon'], daymet['lat']), axis=-1).reshape((-1, 2)),
+#     xi=np.stack(np.meshgrid(chirps.longitude, chirps.latitude), axis=-1).reshape((-1, 2)),
+# method='linear').reshape(493, 1412, 20)
+# print(time.time() - s)
 
 
-from mpl_toolkits.basemap import Basemap
-m = Basemap(projection='cyl', resolution='l',
-            llcrnrlat=lat_daymet.min(), urcrnrlat =lat_daymet.max(),
-            llcrnrlon=lon_daymet.min(), urcrnrlon =lon_daymet.max()) 
 
 
-pcolormesh = m.pcolormesh(chirps.longitude, chirps.latitude,
-                          daymet_coarse[:, :, 0], 
-                          latlon=True, cmap='jet')
 
 
-# pcolormesh = m.pcolormesh(daymet.lon, daymet.lat, daymet.tmax[0], 
-#                           latlon=True, cmap='jet') 
+# from mpl_toolkits.basemap import Basemap
+# m = Basemap(projection='cyl', resolution='l',
+#             llcrnrlat=lat_daymet.min(), urcrnrlat =lat_daymet.max(),
+#             llcrnrlon=lon_daymet.min(), urcrnrlon =lon_daymet.max()) 
 
-# np.random.seed(0)
+
 # pcolormesh = m.pcolormesh(chirps.longitude, chirps.latitude,
-#                           chirps.precip[0]+np.random.rand(4,8), 
-#                           latlon=True, cmap='jet') 
-
-# pcolormesh = m.pcolormesh(daymet.lon, daymet.lat,
-#                           arg_dd.reshape(18, 25), 
-#                           latlon=True, cmap='jet',
-#                           vmin=0, vmax=30)      
+#                           daymet_coarse[:, :, 0], 
+#                           latlon=True, cmap='jet')
 
 
-import matplotlib.pyplot as plt
-fig = plt.gcf()
+# # pcolormesh = m.pcolormesh(daymet.lon, daymet.lat, daymet.tmax[0], 
+# #                           latlon=True, cmap='jet') 
 
-fig.colorbar(pcolormesh)        
-# m.drawparallels(np.arange(-90, 90, 50),
-#                 labels=[1, 0, 0, 0])
-# m.drawmeridians(np.arange(-180, 180, 50),
-#                 labels=[0, 0, 0, 1])
-####        
+# # np.random.seed(0)
+# # pcolormesh = m.pcolormesh(chirps.longitude, chirps.latitude,
+# #                           chirps.precip[0]+np.random.rand(4,8), 
+# #                           latlon=True, cmap='jet') 
+
+# # pcolormesh = m.pcolormesh(daymet.lon, daymet.lat,
+# #                           arg_dd.reshape(18, 25), 
+# #                           latlon=True, cmap='jet',
+# #                           vmin=0, vmax=30)      
+
+
+# import matplotlib.pyplot as plt
+# fig = plt.gcf()
+
+# fig.colorbar(pcolormesh)        
+# # m.drawparallels(np.arange(-90, 90, 50),
+# #                 labels=[1, 0, 0, 0])
+# # m.drawmeridians(np.arange(-180, 180, 50),
+# #                 labels=[0, 0, 0, 1])
+# ####        
         
 

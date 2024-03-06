@@ -63,7 +63,7 @@ class ClipRaster:
             c2 = np.abs((lat[-1, -1] - lat[0, 0]) / (lat.shape[0]-1))
             self.cell_size = min(c1, c2)
         
-
+        print('cell size:', self.cell_size)
     def mask_shp(self, shp_path: str, crs=None, weights = False, scale_factor=10):
         assert scale_factor >= 1, "scale_factor is less than one"
         """

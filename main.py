@@ -124,7 +124,7 @@ def mod_lat_lon(mod):
     x = np.linspace(x0, x1, nx)
     y = np.linspace(y0, y1, ny)
     xv, yv = np.meshgrid(x, y)
-    
+    print(xv, yv)
     # sinu = pyproj.Proj("+proj=sinu +R=6371007.181 +nadgrids=@null +wktext")
     # wgs84 = pyproj.Proj("+init=EPSG:4326") 
     # lon, lat= pyproj.transform(sinu, wgs84, xv, yv)    
@@ -138,7 +138,218 @@ def mod_lat_lon(mod):
     
     
     return lat, lon
+def mod_y_x(mod):
+    fattrs = mod.attrs
+    gridmeta = fattrs["StructMetadata.0"]
+    
+    ul_regex = re.compile(r'''UpperLeftPointMtrs=\(
+                              (?P<upper_left_x>[+-]?\d+\.\d+)
+                              ,
+                              (?P<upper_left_y>[+-]?\d+\.\d+)
+                              \)''', re.VERBOSE)
+    
+    match = ul_regex.search(gridmeta)
+    x0 = float(match.group('upper_left_x'))
+    y0 = float(match.group('upper_left_y'))
+    
+    lr_regex = re.compile(r'''LowerRightMtrs=\(
+                              (?P<lower_right_x>[+-]?\d+\.\d+)
+                              ,
+                              (?P<lower_right_y>[+-]?\d+\.\d+)
+                              \)''', re.VERBOSE)
+    match = lr_regex.search(gridmeta)
+    x1 = float(match.group('lower_right_x'))
+    y1 = float(match.group('lower_right_y'))
+    
+    nx, ny = data[0].shape
+    x = np.linspace(x0, x1, nx*2+1)
+    y = np.linspace(y0, y1, ny*2+1)
+    # x = x[1:]
+    # y = y[1:]
+    # x = x[::2]
+    # y = y[::2]
+    x = x[1::2]
+    y = y[1::2]
+    #xv, yv = np.meshgrid(x, y)
+    # print(xv, yv)
+    # # sinu = pyproj.Proj("+proj=sinu +R=6371007.181 +nadgrids=@null +wktext")
+    # # wgs84 = pyproj.Proj("+init=EPSG:4326") 
+    # # lon, lat= pyproj.transform(sinu, wgs84, xv, yv)    
+    
+    # transformer = Transformer.from_crs("+proj=sinu +R=6371007.181 +nadgrids=@null +wktext", 
+    #                                    "+init=EPSG:4326")
+    
+    # lon, lat= transformer.transform(xv, yv)
+    
+    
+    
+    
+    return y, x
 
+
+# from datapreprocess import *
+# dp = DataPreprocess(user='kgavahi', password='491Newyork')
+# dp.dl_modis(path='modis2', product='MOD11A2.061', 
+#             start_date='20210101',
+#             tiles='conus')
+
+import glob
+files = glob.glob('modis2/*.hdf')
+
+dss = []
+
+for file in files:
+
+    
+    da = xr.open_dataset(file, engine='netcdf4')
+    
+    data = np.array(da.to_array())
+    
+    lat, lon = mod_y_x(da)
+    print(lat)
+    print(lon)
+
+    da = da.rename_dims({'YDim:MODIS_Grid_8Day_1km_LST': 'y'})
+    da = da.rename_dims({'XDim:MODIS_Grid_8Day_1km_LST': 'x'})
+    
+    da = da.assign_coords(y=("y", lat))
+    da = da.assign_coords(x=("x", lon))
+
+    da.attrs.clear()
+    dss.append(da)
+
+da_comb = xr.combine_by_coords(dss)
+
+#ET_500m = xr.where((da_comb.ET_500m>3000) | (da_comb.ET_500m<0), np.nan, da_comb.ET_500m)
+
+da_comb.LST_Day_1km.plot()
+
+aa
+
+
+da = xr.open_dataset('modis/MOD16A2.A2022121.h10v05.061.2022144042935.hdf', engine='netcdf4')
+
+data = np.array(da.to_array())
+
+lat, lon = mod_y_x(da)
+
+da = da.rename_dims({'YDim:MOD_Grid_MOD16A2': 'y'})
+da = da.rename_dims({'XDim:MOD_Grid_MOD16A2': 'x'})
+
+da = da.assign_coords(y=("y", lat))
+da.attrs.clear()
+da1 = da.assign_coords(x=("x", lon))
+
+da = xr.open_dataset('modis/MOD16A2.A2022121.h11v05.061.2022144041153.hdf', engine='netcdf4')
+
+data = np.array(da.to_array())
+
+lat, lon = mod_y_x(da)
+
+da = da.rename_dims({'YDim:MOD_Grid_MOD16A2': 'y'})
+da = da.rename_dims({'XDim:MOD_Grid_MOD16A2': 'x'})
+
+da = da.assign_coords(y=("y", lat))
+da.attrs.clear()
+da2 = da.assign_coords(x=("x", lon))
+
+da3 = xr.combine_by_coords([da2, da1])
+
+
+da3.ET_500m.plot()
+
+aadda
+# da1 = xr.open_dataset('modis/MOD16A2.A2022121.h10v05.061.2022144042935.hdf', engine='netcdf4')
+# da2 = xr.open_dataset('modis/MOD16A2.A2022121.h11v05.061.2022144041153.hdf', engine='netcdf4')
+
+
+# da3 = da1 + da2
+
+# aa
+
+# da = xr.open_mfdataset(
+#     'modis/*.nc',
+
+# )
+
+# da.ET[0].plot()
+
+# aa
+
+da = xr.open_dataset('modis/MOD16A2.A2022121.h10v05.061.2022144042935.hdf', engine='netcdf4')
+
+data = np.array(da.to_array())
+
+lat, lon = mod_y_x(da)
+
+da = da.rename_dims({'YDim:MOD_Grid_MOD16A2': 'y'})
+da = da.rename_dims({'XDim:MOD_Grid_MOD16A2': 'x'})
+
+da = da.assign_coords(y=("y", lat))
+da = da.assign_coords(x=("x", lon))
+
+da.attrs.clear()
+
+da.to_netcdf('modis/h10v05.nc')
+
+
+aada
+da_ET_500m = xr.DataArray(
+    data=data[:1],
+    dims=["time", "y", "x"],
+    coords=dict(
+        x=(["x"], lon),
+        y=(["y"], lat),
+        time=pd.date_range("2022-05-01", periods=1),
+
+    ),
+
+)
+da_LE_500m = xr.DataArray(
+    data=data[1:2],
+    dims=["time", "y", "x"],
+    coords=dict(
+        x=(["x"], lon),
+        y=(["y"], lat),
+        time=pd.date_range("2022-05-01", periods=1),
+
+    ),
+
+)
+
+ds = xr.Dataset(dict(ET_500m=da_ET_500m, LE_500m=da_LE_500m))
+
+da2.to_netcdf('modis/h10v05.nc')
+
+da2.plot()
+
+aada
+import clipraster as cr
+r_da = cr.open_raster(data, lat, lon)
+
+da = xr.open_dataset('modis/MOD16A2.A2022121.h11v05.061.2022144041153.hdf', engine='netcdf4')
+
+data = np.array(da.to_array())
+
+lat, lon = mod_y_x(da)
+
+
+
+r_da = cr.open_raster(data, lat, lon)
+
+aa
+
+da = xr.open_mfdataset(
+    'modis/*',
+    concat_dim="time",
+    combine="nested",
+    engine='netcdf4'
+)
+
+
+
+
+aa
 
 import glob
 
@@ -154,11 +365,11 @@ da = xr.open_mfdataset(
 )
 
 
-da = xr.open_dataset('snodas/us_ssmv11034tS__T0001TTNATS2003100105HP001.nc')
+da = xr.open_dataset(f'snodas/us_ssmv11034tS__T0001TTNATS2003100105HP001.nc')
 
 da = xr.open_dataset('snodas/us_ssmv11034tS__T0001TTNATS2016071205HP001.nc')
 
-
+aa
 
 shp_path = 'C:/Users/kgavahi/Desktop/R/ET_679gages/hysets_basin_shapes.shp'
 
@@ -166,6 +377,8 @@ shp_path = 'C:/Users/kgavahi/Desktop/R/ET_679gages/hysets_basin_shapes.shp'
 lat = np.array(da.lat)
 lon = np.array(da.lon)
 #data = np.zeros([10, 10])
+
+
 
 import clipraster as cr
 r_da = cr.open_raster(data, lat, lon)
