@@ -9,19 +9,19 @@ from Historic_Crypto import HistoricalData
 import yfinance as yf
 
 
-start_date = '2019-01-01-00-00'
+start_date = '1994-01-01-00-00'
 end_date = '2024-01-18-00-00'
 df_stk = yf.download('VOO', start_date[:10], end_date[:10])
 df_stk.columns = [x.lower() for x in df_stk.columns]
 
-df_btc = HistoricalData('BTC-USD', 86400,
-                        start_date, 
-                        end_date).retrieve_data()
-df_eth = HistoricalData('ETH-USD', 86400,
-                        start_date, 
-                        end_date).retrieve_data()
+# df_btc = HistoricalData('BTC-USD', 86400,
+#                         start_date, 
+#                         end_date).retrieve_data()
+# df_eth = HistoricalData('ETH-USD', 86400,
+#                         start_date, 
+#                         end_date).retrieve_data()
 
-capital_stk = 1500*12*5
+capital_stk = 475.33*12*30
 capital_btc = 300*12*5
 capital_eth = 300*12*5
 
@@ -64,17 +64,17 @@ r = alwaysBuy(df_stk, capital_stk)
 print('Return', f'${r:,.2f}')
 print(f'{r/capital_stk:.2f}')
 
-print('\n')
-print('BTC')
-r = alwaysBuy(df_btc, capital_btc)
-print('Return', f'${r:,.2f}')
-print(f'{r/capital_btc:.2f}')
+# print('\n')
+# print('BTC')
+# r = alwaysBuy(df_btc, capital_btc)
+# print('Return', f'${r:,.2f}')
+# print(f'{r/capital_btc:.2f}')
 
-print('\n')
-print('ETH')
-r = alwaysBuy(df_eth, capital_eth)
-print('Return', f'${r:,.2f}')
-print(f'{r/capital_eth:.2f}')
+# print('\n')
+# print('ETH')
+# r = alwaysBuy(df_eth, capital_eth)
+# print('Return', f'${r:,.2f}')
+# print(f'{r/capital_eth:.2f}')
 
 
 
