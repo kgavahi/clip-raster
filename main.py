@@ -187,11 +187,11 @@ def mod_y_x(mod):
     return y, x
 
 
-from datapreprocess import *
-dp = DataPreprocess(user='kgavahi', password='491Newyork')
-dp.dl_modis(path='modis2', product='MOD11A2.061', 
-            start_date='20210101',
-            tiles='conus')
+# from datapreprocess import *
+# dp = DataPreprocess(user='kgavahi', password='491Newyork')
+# dp.dl_modis(path='modis2', product='MOD11A2.061', 
+#             start_date='20210101',
+#             tiles='conus')
 
 import glob
 files = glob.glob('modis2/*.hdf')
