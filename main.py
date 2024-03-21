@@ -218,11 +218,11 @@ for file in files:
     da.attrs.clear()
     dss.append(da)
 
-da_comb = xr.combine_by_coords(dss)
+# da_comb = xr.combine_by_coords(dss)
 
-#ET_500m = xr.where((da_comb.ET_500m>3000) | (da_comb.ET_500m<0), np.nan, da_comb.ET_500m)
+# #ET_500m = xr.where((da_comb.ET_500m>3000) | (da_comb.ET_500m<0), np.nan, da_comb.ET_500m)
 
-da_comb.LST_Day_1km.plot()
+# da_comb.LST_Day_1km.plot()
 
 aa
 
