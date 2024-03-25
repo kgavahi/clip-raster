@@ -463,7 +463,7 @@ def get_next_link(prdt_page):
 
 
 
-chirps = xr.open_dataset('PERSIANN_ACF_basin_2024-03-22105045am.nc')
+persiann = xr.open_dataset('PERSIANN_ACF_basin_2024-03-22105045am.nc')
 
 # # chirps = xr.open_dataset('chirps/CMORPH_V1.0_ADJ_0.25deg-DLY_00Z_20190101.nc')
 # # print(chirps)
