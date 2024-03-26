@@ -187,11 +187,11 @@ def mod_y_x(mod):
     return y, x
 
 
-from datapreprocess import *
-dp = DataPreprocess(user='kgavahi', password='491Newyork')
-dp.dl_modis(path='modis2', product='MOD11A2.061', 
-            start_date='20210101',
-            tiles='conus')
+# from datapreprocess import *
+# dp = DataPreprocess(user='kgavahi', password='491Newyork')
+# dp.dl_modis(path='modis2', product='MOD11A2.061', 
+#             start_date='20210101',
+#             tiles='conus')
 
 import glob
 files = glob.glob('modis2/*.hdf')
@@ -208,7 +208,7 @@ for file in files:
     lat, lon = mod_y_x(da)
     print(lat)
     print(lon)
-
+    aa
     da = da.rename_dims({'YDim:MODIS_Grid_8Day_1km_LST': 'y'})
     da = da.rename_dims({'XDim:MODIS_Grid_8Day_1km_LST': 'x'})
     
@@ -218,11 +218,11 @@ for file in files:
     da.attrs.clear()
     dss.append(da)
 
-# da_comb = xr.combine_by_coords(dss)
+da_comb = xr.combine_by_coords(dss)
 
-# #ET_500m = xr.where((da_comb.ET_500m>3000) | (da_comb.ET_500m<0), np.nan, da_comb.ET_500m)
+#ET_500m = xr.where((da_comb.ET_500m>3000) | (da_comb.ET_500m<0), np.nan, da_comb.ET_500m)
 
-# da_comb.LST_Day_1km.plot()
+da_comb.LST_Day_1km.plot()
 
 aa
 
@@ -316,6 +316,20 @@ da_LE_500m = xr.DataArray(
     ),
 
 )
+aa
+
+da = xr.DataArray(
+    data=da_comb,
+    dims=["time", "y", "x"],
+    coords=dict(
+        x=(["y", "x"], x),
+        y=(["y", "x"], y),
+        time=pd.date_range("2021-01-01", periods=1),
+
+    ),
+
+)
+aa
 
 ds = xr.Dataset(dict(ET_500m=da_ET_500m, LE_500m=da_LE_500m))
 
