@@ -16,7 +16,7 @@ df = pd.concat((pd.read_csv(file, usecols=selected_columns)
                 for file in glob.glob('stations/*.csv')), 
                 ignore_index=True)
 df['DATE'] = pd.to_datetime(df['DATE'])
-df = df[(df['DATE'] >= '2001-01-01') & (df['DATE'] <= '2022-01-01')]
+df = df[(df['DATE'] >= '2001-01-01') & (df['DATE'] <= '2002-01-01')]
 print(time.time()-s, 'done reading csv file')
 #############################
 s = time.time()
