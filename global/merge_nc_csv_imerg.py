@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 import xarray as xr
 import time
 import glob
@@ -92,16 +91,46 @@ print(time.time()-s, 'done to_csv')
 
 
 print('---------------------------------------------------------------------------')
-
-
-# Calculate RMSE for each station
-rmse = df2.groupby(['STATION', 'LATITUDE', 'LONGITUDE']).apply(lambda x: np.sqrt(((x['PRCP'] - x['imerg']) ** 2).mean()))
-
+import numpy as np
 import numpy.ma as ma
-corr = df2.groupby(['STATION', 'LATITUDE', 'LONGITUDE']).apply(lambda x: \
-                    ma.corrcoef(ma.masked_invalid(x['PRCP']), ma.masked_invalid(x['imerg']))[0, 1]).reset_index()
+stat = pd.DataFrame()
+products = ['imerg', 'cmorph']
+
+for product in products:
+    # Calculate RMSE for each station
+    stat[f'rmse_{product}'] = df2.groupby(['STATION', 'LATITUDE', 'LONGITUDE']).apply(lambda x: \
+                        np.sqrt(((x['PRCP'] - x['imerg']) ** 2).mean()))
 
 
+    stat[f'corr_{product}'] = df2.groupby(['STATION', 'LATITUDE', 'LONGITUDE']).apply(lambda x: \
+                        ma.corrcoef(ma.masked_invalid(x['PRCP']), ma.masked_invalid(x['imerg']))[0, 1])
+
+
+    
+stat.to_csv('stat.csv')
+
+
+import matplotlib.pyplot as plt
+from mpl_toolkits.basemap import Basemap
+
+down = -89
+up = 89
+left = -180
+right = 180
+m = Basemap(projection='cyl', resolution='l',
+            llcrnrlat=down-.1, urcrnrlat =up+.1,
+            llcrnrlon=left-.1, urcrnrlon =right+.1)
+
+m.drawcoastlines(linewidth=0.5)
+
+lat = stat.index.get_level_values('LATITUDE')
+lon = stat.index.get_level_values('LONGITUDE')
+
+pcolormesh = m.scatter(lon, lat, 
+                        c=stat['corr_imerg'], cmap='rainbow_r', s=1)
+fig = plt.gcf()
+
+fig.colorbar(pcolormesh)
 
 print(corr)
 
