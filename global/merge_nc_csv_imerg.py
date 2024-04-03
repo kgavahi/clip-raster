@@ -1,7 +1,9 @@
 import pandas as pd
+import numpy as np
 import xarray as xr
 import time
 import glob
+
 
 #s = time.time()
 #df = pd.read_csv('/mh1/kgavahi/Paper4/test.csv')
@@ -88,6 +90,20 @@ s = time.time()
 df2.to_csv('test.csv')
 print(time.time()-s, 'done to_csv') 
 
+
+print('---------------------------------------------------------------------------')
+
+
+# Calculate RMSE for each station
+rmse = df2.groupby(['STATION', 'LATITUDE', 'LONGITUDE']).apply(lambda x: np.sqrt(((x['PRCP'] - x['imerg']) ** 2).mean()))
+
+import numpy.ma as ma
+corr = df2.groupby(['STATION', 'LATITUDE', 'LONGITUDE']).apply(lambda x: \
+                    ma.corrcoef(ma.masked_invalid(x['PRCP']), ma.masked_invalid(x['imerg']))[0, 1]).reset_index()
+
+
+
+print(corr)
 
 
 
