@@ -62,9 +62,10 @@ print('''----------------------------CMORPH---------------------------------''')
 s = time.time()
 da = xr.open_mfdataset('CMORPH/'
                        'CMORPH_V1.0_ADJ_0.25deg-DLY_00Z_*.nc')
+da = da.assign_coords(lon=(((da.lon + 180) % 360) - 180))
 da = da.cmorph
 print(time.time()-s, 'done reading prdt files')
-
+a
 s = time.time()
 da = da.sel(lon=tgt_lon, lat=tgt_lat, method="nearest")
 print(time.time()-s, 'done sel')
@@ -118,8 +119,9 @@ for product in products:
 
 
     
-stat.to_csv('stat.csv')
+#stat.to_csv('stat.csv')
 
+stat = pd.read_csv('stat.csv')
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
@@ -134,11 +136,11 @@ m = Basemap(projection='cyl', resolution='l',
 
 m.drawcoastlines(linewidth=0.5)
 
-lat = stat.index.get_level_values('LATITUDE')
-lon = stat.index.get_level_values('LONGITUDE')
+lat = stat['LATITUDE']
+lon = stat['LONGITUDE']
 
 pcolormesh = m.scatter(lon, lat, 
-                        c=stat['corr_imerg'], cmap='rainbow_r', s=1)
+                        c=stat['corr_imerg'], cmap='rainbow_r', s=.1, vmin=0)
 fig = plt.gcf()
 
 fig.colorbar(pcolormesh)
