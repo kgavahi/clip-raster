@@ -1,0 +1,14 @@
+#!/bin/bash 
+
+#SBATCH -p mh1
+#SBATCH -q mh1
+#SBATCH --gres=gpu:a100-80:1
+#SBATCH --mem=999G
+#SBATCH -J s19_2
+#SBATCH -o scenarios/s19/2/s19_2_%j.out
+#SBATCH -p mh1
+#SBATCH -q mh1
+#SBATCH --mail-type=FAIL
+#SBATCH --mail-user=kgavahi@crimson.ua.edu
+
+time python train.py s19 2 ${SLURM_JOBID}
