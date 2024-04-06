@@ -63,13 +63,13 @@ s = time.time()
 da = xr.open_mfdataset('CMORPH/'
                        'CMORPH_V1.0_ADJ_0.25deg-DLY_00Z_*.nc')
 da.coords['lon'] = (da.coords['lon'] + 180) % 360 - 180
-da = da.sortby(da.lon)
+#da = da.sortby(da.lon)
 
 
 
 da = da.cmorph
 da = da.where((da>=0) & (da<100000))
-da[0].plot()
+da[0].plot(cmap='gist_ncar_r')
 print(time.time()-s, 'done reading prdt files')
 aa
 s = time.time()
