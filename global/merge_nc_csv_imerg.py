@@ -29,6 +29,7 @@ tgt_lat = xr.DataArray(lat_st, dims="STATION", coords=dict(STATION=stations))
 tgt_lon = xr.DataArray(lon_st, dims="STATION", coords=dict(STATION=stations))
 print(time.time()-s, 'done drop_duplicates')
 ################################
+
 print('''----------------------------IMERG---------------------------------''')
 s = time.time()
 da = xr.open_mfdataset('IMERG/'
@@ -58,12 +59,41 @@ print(time.time()-s, 'done to_dataframe')
 s = time.time()
 df2 = df.merge(df_prdt, on=['DATE', 'STATION'], how='outer')
 print(time.time()-s, 'done merge')
+print('''------------------------------CPC----------------------------------''')
+s = time.time()
+da = xr.open_mfdataset('CPC/'
+                       'precip.V1.0.*.nc')
+da.coords['lon'] = (da.coords['lon'] + 180) % 360 - 180
+da = da.sortby(da.lon)
+da = da.precip
+da = da.where((da>=0) & (da<100000))
+print(time.time()-s, 'done reading prdt files')
+
+
+s = time.time()
+da = da.sel(lon=tgt_lon, lat=tgt_lat, method="nearest")
+print(time.time()-s, 'done sel')
+
+s = time.time()
+df_prdt = da.to_dataframe()
+df_prdt = df_prdt.reset_index().rename(columns={'datetime':'DATE',
+                                                    #'lat':'lat_cmorph',
+                                                    #'lon':'lon_cmorph',
+                                                    'precip':'cpc'})
+df_prdt.drop(columns=['lat', 'lon'], inplace=True)
+print(time.time()-s, 'done to_dataframe')
+
+
+s = time.time()
+df2 = df2.merge(df_prdt, on=['DATE', 'STATION'], how='outer')
+print(time.time()-s, 'done merge')
+print('''-------------------------------------------------------------------''')
 print('''----------------------------CMORPH---------------------------------''')
 s = time.time()
 da = xr.open_mfdataset('CMORPH/'
                        'CMORPH_V1.0_ADJ_0.25deg-DLY_00Z_*.nc')
 da.coords['lon'] = (da.coords['lon'] + 180) % 360 - 180
-#da = da.sortby(da.lon)
+da = da.sortby(da.lon)
 
 
 
