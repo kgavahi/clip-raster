@@ -63,7 +63,9 @@ s = time.time()
 da = xr.open_mfdataset('CMORPH/'
                        'CMORPH_V1.0_ADJ_0.25deg-DLY_00Z_*.nc')
 da = da.assign_coords(lon=(((da.lon + 180) % 360) - 180))
+
 da = da.cmorph
+da = da.where((da>=0) & (da<100000))
 print(time.time()-s, 'done reading prdt files')
 a
 s = time.time()
@@ -139,8 +141,7 @@ m.drawcoastlines(linewidth=0.5)
 lat = stat['LATITUDE']
 lon = stat['LONGITUDE']
 
-pcolormesh = m.scatter(lon, lat, 
-                        c=stat['corr_imerg'], cmap='rainbow_r', s=.1, vmin=0)
+pcolormesh = m.scatter(lon, lat, c=stat['corr_persiann'], cmap='rainbow_r', s=.1, vmin=0)
 fig = plt.gcf()
 
 fig.colorbar(pcolormesh)
