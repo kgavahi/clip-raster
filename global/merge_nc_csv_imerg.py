@@ -62,12 +62,16 @@ print('''----------------------------CMORPH---------------------------------''')
 s = time.time()
 da = xr.open_mfdataset('CMORPH/'
                        'CMORPH_V1.0_ADJ_0.25deg-DLY_00Z_*.nc')
-da = da.assign_coords(lon=(((da.lon + 180) % 360) - 180))
+da.coords['lon'] = (da.coords['lon'] + 180) % 360 - 180
+da = da.sortby(da.lon)
+
+
 
 da = da.cmorph
 da = da.where((da>=0) & (da<100000))
+da[0].plot()
 print(time.time()-s, 'done reading prdt files')
-a
+aa
 s = time.time()
 da = da.sel(lon=tgt_lon, lat=tgt_lat, method="nearest")
 print(time.time()-s, 'done sel')
@@ -92,7 +96,7 @@ s = time.time()
 df2.to_csv('test.csv')
 print(time.time()-s, 'done to_csv') 
 
-
+a
 print('---------------------------------------------------------------------------')
 
 #import numpy as np
