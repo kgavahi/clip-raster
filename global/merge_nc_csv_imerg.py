@@ -76,7 +76,7 @@ print(time.time()-s, 'done sel')
 
 s = time.time()
 df_prdt = da.to_dataframe()
-df_prdt = df_prdt.reset_index().rename(columns={'datetime':'DATE',
+df_prdt = df_prdt.reset_index().rename(columns={'time':'DATE',
                                                     #'lat':'lat_cmorph',
                                                     #'lon':'lon_cmorph',
                                                     'precip':'cpc'})
