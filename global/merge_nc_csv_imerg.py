@@ -5,7 +5,8 @@ import glob
 
 
 
-
+start_date = '2001-01-01'
+end_date = '2022-01-01'
 #########################
 s=time.time()
 selected_columns = ['STATION', 'DATE', 'LATITUDE', 'LONGITUDE', 'PRCP']
@@ -13,8 +14,24 @@ df = pd.concat((pd.read_csv(file, usecols=selected_columns)
                 for file in glob.glob('stations/*.csv')), 
                 ignore_index=True)
 df['DATE'] = pd.to_datetime(df['DATE'])
-df = df[(df['DATE'] >= '2001-01-01') & (df['DATE'] <= '2022-01-01')]
+df = df[(df['DATE'] >= start_date) & (df['DATE'] <= end_date)]
 print(time.time()-s, 'done reading csv file')
+
+
+
+L = len(pd.date_range(start_date, end_date))
+acceptable_size = int(L*0.99)
+
+# Calculate station lengths
+station_lengths = df.groupby('STATION').size()
+
+# Find stations with length less than 7500
+stations_to_remove = station_lengths[station_lengths < acceptable_size].index
+
+# Filter the original dataframe to remove stations with length less than 7500
+filtered_df = df[~df['STATION'].isin(stations_to_remove)]
+
+print(filtered_df)
 
 aa
 #############################
