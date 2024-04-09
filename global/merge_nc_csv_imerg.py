@@ -2,7 +2,7 @@ import pandas as pd
 import xarray as xr
 import time
 import glob
-
+import numpy as np
 
 
 start_date = '2001-01-01'
@@ -18,22 +18,25 @@ df = df[(df['DATE'] >= start_date) & (df['DATE'] <= end_date)]
 print(time.time()-s, 'done reading csv file')
 
 
-
+'''
 L = len(pd.date_range(start_date, end_date))
-acceptable_size = int(L*0.99)
+acceptable_size = int(L*0.2)
 
 # Calculate station lengths
 station_lengths = df.groupby('STATION').size()
+print('station_lengths:', len(station_lengths))
 
-# Find stations with length less than 7500
+# Find stations with length less than acceptable_size
 stations_to_remove = station_lengths[station_lengths < acceptable_size].index
 
 # Filter the original dataframe to remove stations with length less than 7500
-filtered_df = df[~df['STATION'].isin(stations_to_remove)]
+df = df[~df['STATION'].isin(stations_to_remove)]
 
-print(filtered_df)
+# Calculate station lengths
+station_lengths = df.groupby('STATION').size()
+print('station_lengths after filter:', len(station_lengths))'''
 
-aa
+
 #############################
 s = time.time()
 df_dd = df.drop_duplicates(subset=['STATION'])
@@ -46,8 +49,8 @@ print(time.time()-s, 'done drop_duplicates')
 ################################
 print('''----------------------------IMERG---------------------------------''')
 s = time.time()
-da = xr.open_mfdataset('/mh1/kgavahi/Paper4/Download/IMERG_F/IMERG/GPM_3IMERGDF-06/'
-                       '3B-DAY.MS.MRG.3IMERG.*-S000000-E235959.V06.nc4')
+da = xr.open_mfdataset('IMERG/'
+                       '3B-DAY.MS.MRG.3IMERG.*-S000000-E235959.V06.nc4', data_vars=['HQprecipitation'])
 da = da.HQprecipitation
 da = da.where((da>=0) & (da<100000))
 datetimeindex = da.indexes['time'].to_datetimeindex()
@@ -55,83 +58,98 @@ da['time'] = datetimeindex
 print(time.time()-s, 'done reading prdt files')
 
 
-
 s = time.time()
 da = da.sel(lon=tgt_lon, lat=tgt_lat, method="nearest")
 print(time.time()-s, 'done sel')
 
-s = time.time()
-df_prdt = da.to_dataframe()
-df_prdt = df_prdt.reset_index().rename(columns={'time':'DATE',
-                                                    #'lat':'lat_imerg',
-                                                    #'lon':'lon_imerg',
-                                                    'HQprecipitation':'imerg'})
-df_prdt.drop(columns=['lat', 'lon'], inplace=True)
-print(time.time()-s, 'done to_dataframe')
+# s = time.time()
+# df_prdt = da.to_dataframe()
+# df_prdt = df_prdt.reset_index().rename(columns={'time':'DATE',
+#                                                     #'lat':'lat_imerg',
+#                                                     #'lon':'lon_imerg',
+#                                                     'HQprecipitation':'imerg'})
+# df_prdt.drop(columns=['lat', 'lon'], inplace=True)
+# print(time.time()-s, 'done to_dataframe')
 
 
 
-s = time.time()
-df2 = df.merge(df_prdt, on=['DATE', 'STATION'], how='outer')
-print(time.time()-s, 'done merge')
+# s = time.time()
+# df2 = df.merge(df_prdt, on=['DATE', 'STATION'], how='outer')
+# print(time.time()-s, 'done merge')
 print('''----------------------------CMORPH---------------------------------''')
 s = time.time()
-da = xr.open_mfdataset('/mh1/kgavahi/Paper4/Download/CMORPH/'
-                       'CMORPH_V1.0_ADJ_0.25deg-DLY_00Z_*.nc')
+da = xr.open_mfdataset('CMORPH/'
+                       'CMORPH_V1.0_ADJ_0.25deg-DLY_00Z_*.nc', data_vars=['cmorph'], chunks=365)
+
 da.coords['lon'] = (da.coords['lon'] + 180) % 360 - 180
 da = da.sortby(da.lon)
 da = da.cmorph
-da = da.where((da>=0) & (da<100000))
+daCMORPH = da.where((da>=0) & (da<100000))
+
+
+da2 = xr.DataArray(
+    data=np.array(da),
+    dims=["time", "y", "x"],
+    coords=dict(
+        x=(["x"], da.lon.data),
+        y=(["y"], da.lat.data),
+        time=da.time.data,
+
+    ),
+
+)
+
+
 print(time.time()-s, 'done reading prdt files')
 
 s = time.time()
 da = da.sel(lon=tgt_lon, lat=tgt_lat, method="nearest")
 print(time.time()-s, 'done sel')
 
-s = time.time()
-df_prdt = da.to_dataframe()
-df_prdt = df_prdt.reset_index().rename(columns={'time':'DATE',
-                                                    #'lat':'lat_cmorph',
-                                                    #'lon':'lon_cmorph',
-                                                    'cmorph':'cmorph'})
-df_prdt.drop(columns=['lat', 'lon'], inplace=True)
-print(time.time()-s, 'done to_dataframe')
+# s = time.time()
+# df_prdt = da.to_dataframe()
+# df_prdt = df_prdt.reset_index().rename(columns={'time':'DATE',
+#                                                     #'lat':'lat_cmorph',
+#                                                     #'lon':'lon_cmorph',
+#                                                     'cmorph':'cmorph'})
+# df_prdt.drop(columns=['lat', 'lon'], inplace=True)
+# print(time.time()-s, 'done to_dataframe')
 
 
-s = time.time()
-df2 = df2.merge(df_prdt, on=['DATE', 'STATION'], how='outer')
-print(time.time()-s, 'done merge')
+# s = time.time()
+# df2 = df2.merge(df_prdt, on=['DATE', 'STATION'], how='outer')
+# print(time.time()-s, 'done merge')
 print('''----------------------------CHIRPS---------------------------------''')
 s = time.time()
-da = xr.open_mfdataset('/mh1/kgavahi/Paper4/Download/CHIRPS/p05/'
+da = xr.open_mfdataset('CHIRPS/'
                        'chirps-v2.0.*.days_p05.nc')
 da = da.precip
-da = da.where((da>=0) & (da<100000))
+daCHIRPS = da.where((da>=0) & (da<100000))
 print(time.time()-s, 'done reading prdt files')
 
 s = time.time()
 da = da.sel(longitude=tgt_lon, latitude=tgt_lat, method="nearest")
 print(time.time()-s, 'done sel')
 
-s = time.time()
-df_prdt = da.to_dataframe()
-df_prdt = df_prdt.reset_index().rename(columns={'time':'DATE',
-                                                    #'lat':'lat_cmorph',
-                                                    #'lon':'lon_cmorph',
-                                                    'precip':'chirps'})
-df_prdt.drop(columns=['latitude', 'longitude'], inplace=True)
-print(time.time()-s, 'done to_dataframe')
+# s = time.time()
+# df_prdt = da.to_dataframe()
+# df_prdt = df_prdt.reset_index().rename(columns={'time':'DATE',
+#                                                     #'lat':'lat_cmorph',
+#                                                     #'lon':'lon_cmorph',
+#                                                     'precip':'chirps'})
+# df_prdt.drop(columns=['latitude', 'longitude'], inplace=True)
+# print(time.time()-s, 'done to_dataframe')
 
 
-s = time.time()
-df2 = df2.merge(df_prdt, on=['DATE', 'STATION'], how='outer')
-print(time.time()-s, 'done merge')
+# s = time.time()
+# df2 = df2.merge(df_prdt, on=['DATE', 'STATION'], how='outer')
+# print(time.time()-s, 'done merge')
 print('''-------------------------PERSIANN-CDR------------------------------''')
 s = time.time()
-da = xr.open_mfdataset('/mh1/kgavahi/Paper4/Download/PERSIANN/PERSIANN-CDR/'
+da = xr.open_mfdataset('PERSIANN/'
                        'CDR_2022-04-17030747pm_*.nc')
 da = da.precip
-da = da.where((da>=0) & (da<100000))
+daPERSIANN = da.where((da>=0) & (da<100000))
 print(time.time()-s, 'done reading prdt files')
 
 
@@ -139,27 +157,27 @@ s = time.time()
 da = da.sel(lon=tgt_lon, lat=tgt_lat, method="nearest")
 print(time.time()-s, 'done sel')
 
-s = time.time()
-df_prdt = da.to_dataframe()
-df_prdt = df_prdt.reset_index().rename(columns={'datetime':'DATE',
-                                                    #'lat':'lat_cmorph',
-                                                    #'lon':'lon_cmorph',
-                                                    'precip':'persiann'})
-df_prdt.drop(columns=['lat', 'lon'], inplace=True)
-print(time.time()-s, 'done to_dataframe')
+# s = time.time()
+# df_prdt = da.to_dataframe()
+# df_prdt = df_prdt.reset_index().rename(columns={'datetime':'DATE',
+#                                                     #'lat':'lat_cmorph',
+#                                                     #'lon':'lon_cmorph',
+#                                                     'precip':'persiann'})
+# df_prdt.drop(columns=['lat', 'lon'], inplace=True)
+# print(time.time()-s, 'done to_dataframe')
 
 
-s = time.time()
-df2 = df2.merge(df_prdt, on=['DATE', 'STATION'], how='outer')
-print(time.time()-s, 'done merge')
+# s = time.time()
+# df2 = df2.merge(df_prdt, on=['DATE', 'STATION'], how='outer')
+# print(time.time()-s, 'done merge')
 print('''------------------------------CPC----------------------------------''')
 s = time.time()
-da = xr.open_mfdataset('/mh1/kgavahi/Paper4/Download/CPC/'
+da = xr.open_mfdataset('CPC/'
                        'precip.V1.0.*.nc')
 da.coords['lon'] = (da.coords['lon'] + 180) % 360 - 180
 da = da.sortby(da.lon)
 da = da.precip
-da = da.where((da>=0) & (da<100000))
+daCPC = da.where((da>=0) & (da<100000))
 print(time.time()-s, 'done reading prdt files')
 
 
@@ -167,19 +185,19 @@ s = time.time()
 da = da.sel(lon=tgt_lon, lat=tgt_lat, method="nearest")
 print(time.time()-s, 'done sel')
 
-s = time.time()
-df_prdt = da.to_dataframe()
-df_prdt = df_prdt.reset_index().rename(columns={'time':'DATE',
-                                                    #'lat':'lat_cmorph',
-                                                    #'lon':'lon_cmorph',
-                                                    'precip':'cpc'})
-df_prdt.drop(columns=['lat', 'lon'], inplace=True)
-print(time.time()-s, 'done to_dataframe')
+# s = time.time()
+# df_prdt = da.to_dataframe()
+# df_prdt = df_prdt.reset_index().rename(columns={'time':'DATE',
+#                                                     #'lat':'lat_cmorph',
+#                                                     #'lon':'lon_cmorph',
+#                                                     'precip':'cpc'})
+# df_prdt.drop(columns=['lat', 'lon'], inplace=True)
+# print(time.time()-s, 'done to_dataframe')
 
 
-s = time.time()
-df2 = df2.merge(df_prdt, on=['DATE', 'STATION'], how='outer')
-print(time.time()-s, 'done merge')
+# s = time.time()
+# df2 = df2.merge(df_prdt, on=['DATE', 'STATION'], how='outer')
+# print(time.time()-s, 'done merge')
 print('''-------------------------------------------------------------------''')
 
 
