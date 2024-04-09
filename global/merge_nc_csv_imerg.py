@@ -79,16 +79,15 @@ print(time.time()-s, 'done sel')
 print('''----------------------------CMORPH---------------------------------''')
 s = time.time()
 da = xr.open_mfdataset('CMORPH/'
-                       'CMORPH_V1.0_ADJ_0.25deg-DLY_00Z_*.nc', data_vars=['cmorph'], chunks=365)
+                       '*.nc')
+a
 
-da.coords['lon'] = (da.coords['lon'] + 180) % 360 - 180
-da = da.sortby(da.lon)
 da = da.cmorph
 daCMORPH = da.where((da>=0) & (da<100000))
 
 
 da2 = xr.DataArray(
-    data=np.array(da),
+    data=da,
     dims=["time", "y", "x"],
     coords=dict(
         x=(["x"], da.lon.data),
@@ -101,6 +100,10 @@ da2 = xr.DataArray(
 
 
 print(time.time()-s, 'done reading prdt files')
+
+s = time.time()
+da2 = da2.sel(x=tgt_lon, y=tgt_lat, method="nearest")
+print(time.time()-s, 'done sel')
 
 s = time.time()
 da = da.sel(lon=tgt_lon, lat=tgt_lat, method="nearest")
