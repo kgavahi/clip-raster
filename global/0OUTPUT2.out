@@ -1,0 +1,36 @@
+735.2186975479126 done reading csv file
+station_lengths: 74260
+station_lengths after filter: 23860
+1.8286728858947754 done drop_duplicates
+----------------------------IMERG---------------------------------
+4.098098516464233 done reading prdt files
+1.3876585960388184 done sel
+239.33793425559998 done to_dataframe
+85.77214670181274 done merge
+----------------------------CMORPH---------------------------------
+0.194197416305542 done reading prdt files
+0.49683213233947754 done sel
+32.44705677032471 done to_dataframe
+85.97400379180908 done merge
+----------------------------CHIRPS---------------------------------
+0.3277606964111328 done reading prdt files
+0.6984295845031738 done sel
+2345.569744825363 done to_dataframe
+144.55935835838318 done merge
+-------------------------PERSIANN-CDR------------------------------
+0.31456685066223145 done reading prdt files
+0.5066056251525879 done sel
+152.08814597129822 done to_dataframe
+143.82393169403076 done merge
+------------------------------CPC----------------------------------
+0.9177975654602051 done reading prdt files
+1.3403444290161133 done sel
+51.955549001693726 done to_dataframe
+244.1905972957611 done merge
+-------------------------------------------------------------------
+2923.2985711097717 done to_csv
+299.1630222797394 done stat for imerg
+275.9284932613373 done stat for cmorph
+288.253347158432 done stat for chirps
+285.31616282463074 done stat for persiann
+290.4942672252655 done stat for cpc
