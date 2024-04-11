@@ -159,7 +159,7 @@ print('''----------------------------CHIRPS---------------------------------''')
 print('''------------------------------CPC----------------------------------''')
 s = time.time()
 da = xr.open_mfdataset('CPC/'
-                        'precip.V1.0.*.nc')
+                        'precip.*.nc')
 da.coords['lon'] = (da.coords['lon'] + 180) % 360 - 180
 da = da.sortby(da.lon)
 da = da.precip
