@@ -186,7 +186,7 @@ df2 = df2.merge(df_prdt, on=['DATE', 'STATION'], how='outer')
 print(time.time()-s, 'done merge')
 print('''-------------------------------------------------------------------''')
 
-
+df2=df2.dropna()
 s = time.time()
 df2.to_csv('merge.csv')
 print(time.time()-s, 'done to_csv') 
@@ -229,10 +229,10 @@ m.drawcoastlines(linewidth=0.5)
 lat = stat['LATITUDE']
 lon = stat['LONGITUDE']
 
-pcolormesh = m.scatter(lon, lat, c=stat['corr_persiann'], cmap='rainbow_r', s=.1, vmin=0)
+pcolormesh = m.scatter(lon, lat, c=stat['corr_imerg'], cmap='rainbow_r', s=.1, vmin=0)
 fig = plt.gcf()
 
-fig.colorbar(pcolormesh)
+#fig.colorbar(pcolormesh)
 
 
 
