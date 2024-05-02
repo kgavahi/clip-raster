@@ -12,7 +12,3 @@ print(xres, yres)
 
 
 
-print('asdasd')
-
-
-print('asdsad)
