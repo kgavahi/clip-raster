@@ -10,5 +10,5 @@ ulx, xres, xskew, uly, yskew, yres  = src.GetGeoTransform()
 
 print(xres, yres)
 
-
+print(ulx)
 
