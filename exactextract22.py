@@ -9,6 +9,7 @@ import xarray as xr
 import geopandas as gpd
 from pyproj import CRS
 import rioxarray
+import time
 
 # Load the raster dataset from the NetCDF file
 nc_path = "daymet_v4_daily_na_swe_2011.nc"
@@ -38,8 +39,10 @@ output_shapefile = "HCDN_nhru_final_671_daymet.shp"
 # 
 # =============================================================================
 
-
+s=time.time()
 # Perform the exact extraction
 stats = exact_extract(rast, output_shapefile, ['mean'])
+tpassed = time.time()-s
+print(tpassed)
 
-print(stats)
+# print(stats)
