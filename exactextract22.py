@@ -15,7 +15,7 @@ import time
 nc_path = "daymet_v4_daily_na_swe_2011.nc"
 rast = xr.open_dataset(nc_path)
 
-rast = rast['swe']
+rast = rast['swe'][:10]
 
 # Open the shapefile using geopandas
 # =============================================================================
